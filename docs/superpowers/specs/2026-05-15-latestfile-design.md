@@ -24,6 +24,12 @@ Latestfile defines that language.
 
 ---
 
+## Normative Language
+
+The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in [RFC 2119](https://www.rfc-editor.org/rfc/rfc2119).
+
+---
+
 ## Core Concepts
 
 ### Identity, Not Configuration
@@ -51,27 +57,52 @@ A single individual operates in multiple contexts: at home with personal tools, 
 | Org      | `github.com/<org>/latestfile`                        |
 | Project  | `<repo>/.latestfile` (optional, policies only)       |
 
-A project-level Latestfile may only declare `policy` blocks. It cannot declare tools, models, workflows, or contexts.
+A project-level Latestfile MUST only declare `policy` blocks. It MUST NOT declare `tool`, `model`, `workflow`, `instructions`, `context`, or `profile` blocks.
 
 ### Version Declaration
 
-Every Latestfile must begin with a version declaration:
+Every Latestfile MUST begin with a version declaration:
 
 ```hcl
 latestfile_version = "0.1"
 ```
 
-Parsers must ignore unknown fields rather than error. This ensures forward compatibility as the spec evolves.
+The value MUST be a string in `MAJOR.MINOR` format. Parsers MUST ignore unknown fields and unknown block types rather than error. This ensures forward compatibility as the spec evolves.
+
+### Identifiers
+
+Block names (the quoted label after the block type) MUST match the pattern `[a-zA-Z][a-zA-Z0-9_-]*`. Names containing hyphens MUST use bracket syntax in reference expressions:
+
+```hcl
+tool "claude-code" { ... }
+
+# Reference using quoted syntax when name contains hyphens
+uses = [tool["claude-code"]]
+
+# Reference using dot syntax when name is alphanumeric/underscore only
+uses = [tool.cursor]
+```
+
+Parsers MUST support both reference forms.
+
+### Error Handling
+
+A conformant parser MUST distinguish between two error classes:
+
+- **Parse error** — the file is not valid syntax (malformed block, unclosed brace, invalid assignment). Parsers MUST halt and report the location.
+- **Validation error** — the file is syntactically valid but violates a normative constraint (undefined reference, reserved field used as vendor field, project-level file containing a non-`policy` block). Parsers SHOULD collect and report all validation errors before halting.
+
+Unknown block types and unknown fields within known blocks are NOT errors. Parsers MUST silently ignore them.
 
 ---
 
 ## Entity Types
 
-The spec defines seven first-class resource types. Each is a named block.
+The spec defines seven first-class resource types. Each is a named block. Duplicate block names within the same type are a validation error.
 
 ### `tool`
 
-An AI tool in use. Core fields are reserved; all other fields are vendor-defined and validated against the vendor's published schema at `latest.dev/registry`.
+An AI tool in use. The `from`, `version`, and `provider` fields are reserved. All other fields are vendor-defined and MAY be validated against the vendor's published schema at `latest.dev/registry` (see Registry section).
 
 ```hcl
 tool "claude-code" {
@@ -89,11 +120,13 @@ tool "cursor" {
 }
 ```
 
-Reserved core fields: `from`, `version`, `provider`. All other fields are vendor-owned.
+The `from` field, if present, MUST use the `registry:` URI scheme: `registry:<namespace>/<name>`. The namespace and name MUST each match `[a-z0-9][a-z0-9-]*`. Parsers MUST NOT require registry resolution to parse a file; a missing or unreachable registry is not a parse or validation error.
+
+The `version` field, if present, MUST be a semver constraint string.
 
 ### `model`
 
-An AI model. References a canonical model definition from the registry.
+An AI model. The `from` and `provider` fields are reserved.
 
 ```hcl
 model "claude-sonnet" {
@@ -109,72 +142,80 @@ model "gpt4o" {
 
 ### `workflow`
 
-A named description of how AI fits into a development process. References tools and models by block name.
+A descriptive declaration of how AI fits into a development process. `workflow` blocks are informational in v1 — they carry no enforcement semantics. References to tools and models are for documentation and correlation purposes only.
 
 ```hcl
 workflow "feature-development" {
   description = "End-to-end AI-assisted feature work"
-  uses        = [tool.claude-code, tool.cursor]
-  models      = [model.claude-sonnet]
+  uses        = [tool["claude-code"], tool.cursor]
+  models      = [model["claude-sonnet"]]
 }
 
 workflow "code-review" {
   description = "AI-assisted PR review"
-  uses        = [tool.claude-code]
-  models      = [model.claude-sonnet]
+  uses        = [tool["claude-code"]]
+  models      = [model["claude-sonnet"]]
 }
 ```
 
 ### `instructions`
 
-A reference to AI instructions or system prompts used in this setup. The `source` field points to a local file path or URL.
+A reference to AI instructions or system prompts used in this setup. Informational in v1.
 
 ```hcl
 instructions "global" {
-  source      = "./CLAUDE.md"
-  applies_to  = [tool.claude-code]
+  source     = "./CLAUDE.md"
+  applies_to = [tool["claude-code"]]
 }
 ```
 
+The `source` field MUST be a relative file path (relative to the Latestfile's location) or an `https://` URL. Parsers MUST NOT fetch remote URLs during parsing. The `source` field is informational; parsers MUST NOT read or validate the referenced file.
+
 ### `policy`
 
-A rule governing AI tool behavior. Policies may restrict (deny) or require specific behavior.
+A rule declaring intent about AI tool behavior. Policies are descriptive in v1 — they express intent but carry no enforcement mechanism. A future spec version may define enforcement semantics.
 
 ```hcl
 policy "no-ai-on-secrets" {
   description = "AI tools cannot read secret files"
   denies      = ["**/.env*", "**/secrets/**", "**/*.pem"]
-  applies_to  = [tool.claude-code, tool.cursor]
+  applies_to  = [tool["claude-code"], tool.cursor]
 }
 
 policy "require-review-workflow" {
   description = "All PRs must use the code-review workflow"
-  requires    = [workflow.code-review]
+  requires    = [workflow["code-review"]]
 }
 ```
 
+The `denies` field, if present, MUST be a list of glob patterns using the [gitignore glob syntax](https://git-scm.com/docs/gitignore#_pattern_format). Patterns are relative to the repository root when interpreted in a project context, and informational otherwise.
+
 ### `context`
 
-A named composition of this identity with an external org or team Latestfile. Describes how the individual operates in a specific setting.
+A named composition of this identity with an external org or team Latestfile. The `import` field is OPTIONAL; a context without `import` describes a standalone composition using only locally defined entities.
 
 ```hcl
 context "home" {
-  tools  = [tool.claude-code]
-  models = [model.claude-sonnet]
+  tools  = [tool["claude-code"]]
+  models = [model["claude-sonnet"]]
 }
 
 context "work" {
   import = "github.com/acme/latestfile"
-  tools  = [tool.claude-code, tool.cursor]
-  models = [model.claude-sonnet, org.model.gpt4-azure]
+  tools  = [tool["claude-code"], tool.cursor]
+  models = [model["claude-sonnet"], org.model["gpt4-azure"]]
 }
 ```
 
-The `import` field references an org or team Latestfile. Entities prefixed with `org.` are defined in the imported file.
+**The `import` field** MUST be a `github.com/<org>/<repo>` path pointing to a repository containing a `latestfile` file at its root. A context block MUST NOT have more than one `import` field.
+
+**The `org.` prefix** is available only within a `context` block that declares an `import`. It accesses entities defined in the imported Latestfile. The supported forms are: `org.tool.<name>`, `org.model.<name>`, `org.workflow.<name>`, `org.policy.<name>`, `org.instructions.<name>`. Referencing `org.*` without a declared `import` is a validation error.
+
+Context blocks describe which entities are active in that context. They do not override the configuration of referenced entities — a tool's vendor fields are defined in the `tool` block and are the same across all contexts.
 
 ### `profile`
 
-A declaration of the person or entity this file describes.
+A declaration of the person or entity this file describes. Personal and team Latestfiles SHOULD contain exactly one `profile` block. Org Latestfiles MAY omit it.
 
 ```hcl
 profile "james" {
@@ -183,25 +224,27 @@ profile "james" {
 }
 ```
 
+The `role` field is a free-form string. Future spec versions MAY define a standard vocabulary.
+
 ---
 
 ## Relationships
 
-Entities reference each other by block type and name: `tool.claude-code`, `model.claude-sonnet`, `workflow.code-review`. References are validated at parse time — a reference to an undefined block is an error.
+Entities reference each other by block type and name. Dot syntax (`tool.cursor`) is valid when the name matches `[a-zA-Z][a-zA-Z0-9_]*`. Bracket syntax (`tool["claude-code"]`) MUST be used for names containing hyphens or other non-underscore non-alphanumeric characters. This rule applies to all reference forms including `org.` chain references — hyphenated entity names in imported files MUST use bracket syntax: `org.model["gpt4-azure"]`.
 
-Org files may define entities that individuals reference with the `org.` prefix. This is the only cross-file reference mechanism in v1.
+A reference to an undefined block is a validation error. Circular references are a validation error.
+
+Cross-file references are ONLY permitted via the `org.` prefix within a `context` block that declares an `import`. There is no other mechanism for referencing entities across files in v1.
 
 ---
 
 ## Registry
 
-`latest.dev/registry` hosts two kinds of entries:
+`latest.dev/registry` hosts two kinds of entries. The registry interface is defined here; the registry implementation is out of scope for v1.
 
-**Core entity definitions** — canonical definitions of known tools, models, and providers. Referencing `registry:anthropic/claude-code` pulls the canonical definition so common fields don't need to be redeclared.
+**Core entity definitions** — canonical definitions of known tools, models, and providers. A `from = "registry:<namespace>/<name>"` field indicates that a canonical definition exists. Parsers MUST NOT require registry access to validate a file.
 
-**Vendor schemas** — tool makers publish a JSON Schema for their vendor-specific fields. When a `tool` block references `registry:anysphere/cursor`, any fields beyond the reserved core are validated against Anysphere's published schema. Vendor schema registration is opt-in; files referencing unregistered tools are valid but vendor fields are unvalidated.
-
-The registry interface (how vendors publish schemas, how resolution works) is defined by this spec. The registry implementation is out of scope for v1.
+**Vendor schemas** — tool makers MAY publish a JSON Schema for their vendor-specific fields. When a `tool` block declares `from = "registry:anysphere/cursor"`, tooling MAY validate vendor fields against Anysphere's published schema. Vendor schema registration is opt-in. Files referencing unregistered tools are valid; their vendor fields are unvalidated.
 
 ---
 
@@ -210,7 +253,6 @@ The registry interface (how vendors publish schemas, how resolution works) is de
 ```hcl
 latestfile_version = "0.1"
 
-# Tools
 tool "claude-code" {
   from     = "registry:anthropic/claude-code"
   version  = ">=1.0"
@@ -225,50 +267,45 @@ tool "cursor" {
   privacy_mode = false
 }
 
-# Models
 model "claude-sonnet" {
   from     = "registry:anthropic/claude-sonnet-4-6"
   provider = "anthropic"
 }
 
-# Workflows
 workflow "feature-development" {
   description = "End-to-end AI-assisted feature work"
-  uses        = [tool.claude-code, tool.cursor]
-  models      = [model.claude-sonnet]
+  uses        = [tool["claude-code"], tool.cursor]
+  models      = [model["claude-sonnet"]]
 }
 
 workflow "code-review" {
   description = "AI-assisted PR review"
-  uses        = [tool.claude-code]
-  models      = [model.claude-sonnet]
+  uses        = [tool["claude-code"]]
+  models      = [model["claude-sonnet"]]
 }
 
-# Instructions
 instructions "global" {
   source     = "./CLAUDE.md"
-  applies_to = [tool.claude-code]
+  applies_to = [tool["claude-code"]]
 }
 
-# Policies
 policy "no-ai-on-secrets" {
-  denies     = ["**/.env*", "**/secrets/**"]
-  applies_to = [tool.claude-code, tool.cursor]
+  description = "AI tools cannot read secret files"
+  denies      = ["**/.env*", "**/secrets/**"]
+  applies_to  = [tool["claude-code"], tool.cursor]
 }
 
-# Contexts
 context "home" {
-  tools  = [tool.claude-code]
-  models = [model.claude-sonnet]
+  tools  = [tool["claude-code"]]
+  models = [model["claude-sonnet"]]
 }
 
 context "work" {
   import = "github.com/acme/latestfile"
-  tools  = [tool.claude-code, tool.cursor]
-  models = [model.claude-sonnet, org.model.gpt4-azure]
+  tools  = [tool["claude-code"], tool.cursor]
+  models = [model["claude-sonnet"], org.model["gpt4-azure"]]
 }
 
-# Profile
 profile "james" {
   role     = "engineer"
   contexts = [context.home, context.work]
@@ -279,18 +316,29 @@ profile "james" {
 
 ## Reserved Field Names
 
-The following field names are reserved across all block types and may not be used as vendor-defined fields:
+The following field names are reserved across all block types and MUST NOT be used as vendor-defined fields:
 
-`from`, `version`, `provider`, `description`, `applies_to`, `uses`, `models`, `import`, `source`, `denies`, `requires`, `role`, `contexts`
+`from`, `version`, `provider`, `description`, `applies_to`, `uses`, `models`, `import`, `source`, `denies`, `requires`, `role`, `contexts`, `tools`
+
+---
+
+## Security Considerations
+
+**Path traversal.** The `instructions.source` field accepts relative file paths. Tooling that reads this field MUST resolve paths relative to the Latestfile's location and MUST NOT follow paths that escape the containing directory (e.g., `../../etc/passwd`).
+
+**Remote URL fetching.** The `instructions.source` field accepts `https://` URLs. Tooling that fetches remote URLs MUST restrict requests to trusted origins and MUST NOT expose responses to untrusted parties. Parsers MUST NOT auto-fetch remote URLs without explicit user action.
+
+**Registry resolution.** The `from` field uses a `registry:` URI. Tooling that resolves registry URIs MUST use HTTPS and MUST validate TLS certificates. Parsers that do not perform registry resolution are not affected.
 
 ---
 
 ## Versioning and Evolution
 
 - The spec version is declared with `latestfile_version` at the top of every file.
-- Parsers must silently ignore unknown block types and unknown fields within known blocks.
-- New reserved field names introduced in future versions will be listed in a migration guide.
-- Breaking changes require a major version increment.
+- Parsers MUST silently ignore unknown block types and unknown fields within known blocks.
+- New reserved field names introduced in future spec versions will be listed in a migration guide.
+- Breaking changes — removing block types, changing field semantics, tightening validation — require a major version increment.
+- Additive changes — new block types, new optional fields — increment the minor version.
 
 ---
 
@@ -302,15 +350,19 @@ The following are explicitly deferred:
 - Builder UI for generating Latestfiles
 - CLI validation tooling
 - Analytics and outcomes correlation
-- Enforcement mechanisms
+- Enforcement mechanisms for `policy` and `workflow` blocks
 - Team and org aggregation tooling
 - Authentication or signing of Latestfiles
+- Formal ABNF grammar (deferred to v1.0 RFC)
 
 ---
 
 ## Open Questions
 
-1. Should `context` blocks be allowed to *override* personal tool config (e.g., different privacy settings at work), or only add new entities?
+1. Should `context` blocks be allowed to *override* personal tool config (e.g., different privacy settings at work via vendor fields), or only add new entities?
 2. Should the spec define a standard way to express AI spend or token limits at the org level?
 3. How should the spec handle tools that don't have a registry entry (custom internal tools)?
 4. Should `profile` be implicit (one per file) rather than a named block?
+5. What is the resolution order when a personal `policy` and an imported org `policy` conflict — does org win, personal win, or is it a validation error?
+6. Is one `profile` block per file required, or can a file have zero `profile` blocks (e.g., a pure org file)?
+7. Should `latestfile_version` use semver or a simpler `MAJOR.MINOR` scheme?
