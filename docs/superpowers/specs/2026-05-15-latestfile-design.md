@@ -61,8 +61,38 @@ The composition rules:
 1. A personal Latestfile is the entry point. Tooling resolves the active `context` (e.g., `home`, `work`) to determine which entities are in scope.
 2. If the active context declares an `import`, the imported org/team Latestfile is layered in. Entities declared in the org file are referenced via `org.*` and combine with the personal set declared in the context.
 3. If a project Latestfile is present at the codebase being worked in, its policies are layered on top of the resolved personal + org policies.
-4. Policies do not override each other in v1 — they accumulate. The accumulation semantics are: `denies` lists are unioned across all in-scope policies (a file matched by any policy is denied); `requires` lists are unioned (all required entities must be present). Two policies with the same name across scopes are treated as distinct policies, not as overrides. Conflict resolution between contradictory policies (e.g., one policy `requires` a workflow that another `denies` access to) is an open question for future versions.
-5. In v1, no level overrides the vendor field values of entities defined at another level. A `tool` block's vendor config (e.g., `privacy_mode`) is authoritative wherever the block is defined. Whether to allow context-level overrides is an open question for future versions (see below).
+4. Policies accumulate across scopes by default. The accumulation semantics are: `denies` lists are unioned across all in-scope policies (a file matched by any policy is denied); `requires` lists are unioned (all required entities must be present). Two policies with the same name across scopes are treated as distinct policies, not as overrides.
+5. **Contradictory policies** (e.g., one policy `requires` a workflow that another effectively `denies` via overlapping globs) are resolved according to the `policy_conflict_resolution` field. See the "Policy Conflict Resolution" subsection below.
+6. In v1, no level overrides the vendor field values of entities defined at another level. A `tool` block's vendor config (e.g., `privacy_mode`) is authoritative wherever the block is defined. Whether to allow context-level overrides is an open question for future versions (see below).
+
+### Policy Conflict Resolution
+
+The OPTIONAL field `policy_conflict_resolution` declares how contradictory policies are resolved during composition. It MAY be declared at the top level of a Latestfile and/or inside a `context` block.
+
+```hcl
+latestfile_version          = "0.1"
+policy_conflict_resolution  = "strict"  # file-level default
+
+context "work" {
+  import                      = "github.com/acme/latestfile"
+  policy_conflict_resolution  = ["project", "org", "personal"]  # context override
+  tools                       = [tool.cursor]
+}
+```
+
+**Valid values:**
+
+- `"strict"` — the default if the field is omitted. Contradictory policies are reported as a validation error and tooling halts on them. The human resolves by editing the Latestfile(s).
+- `"most_restrictive"` — when policies contradict, the deny side wins regardless of which scope declared it. A `denies` always trumps an overlapping `requires`.
+- A list of scope strings drawn from `["personal", "team", "org", "project"]` — the resolution order, first listed wins. Scopes not listed still have their policies accumulated; they only lose precedence when they contradict a listed scope. Example: `["project", "org", "personal"]` means project beats org beats personal on conflict.
+
+**Precedence between declarations:**
+
+- A `policy_conflict_resolution` declared inside a `context` block overrides the file-level declaration within that context.
+- If neither is declared in the active context's resolution chain, the default `"strict"` applies.
+- An imported org or team Latestfile's `policy_conflict_resolution` declaration is informational only in v0.1 — it does not force the importer's behavior. Whether orgs can mandate a resolution strategy is deferred to a future spec version.
+
+**Schema:** the field accepts either a string (`"strict"` or `"most_restrictive"`) or a list of scope strings. Mixing list entries with the special tokens is a validation error.
 
 ---
 
@@ -361,7 +391,7 @@ profile "james" {
 
 The following field names are reserved across all block types and MUST NOT be used as vendor-defined fields:
 
-`from`, `version`, `provider`, `description`, `applies_to`, `uses`, `models`, `import`, `source`, `denies`, `requires`, `role`, `contexts`, `tools`
+`from`, `version`, `provider`, `description`, `applies_to`, `uses`, `models`, `import`, `source`, `denies`, `requires`, `role`, `contexts`, `tools`, `policy_conflict_resolution`
 
 ---
 
@@ -404,4 +434,4 @@ The following are explicitly deferred:
 
 1. Should `context` blocks be allowed to *override* personal tool config (e.g., different privacy settings at work via vendor fields), or only add new entities?
 2. Should the spec define a standard way to express AI spend or token limits at the org level?
-3. What is the resolution order when a personal `policy` and an imported org `policy` conflict — does org win, personal win, or is it a validation error?
+3. Should imported org/team Latestfiles be able to *mandate* a `policy_conflict_resolution` strategy on importers (currently informational only)?
