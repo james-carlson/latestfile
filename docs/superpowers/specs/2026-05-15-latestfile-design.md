@@ -254,7 +254,7 @@ Context blocks describe which entities are active in that context. They do not o
 
 ### `profile`
 
-A declaration of the person or entity this file describes. Personal and team Latestfiles SHOULD contain exactly one `profile` block. Org Latestfiles MAY omit it.
+A declaration of the person or entity this file describes. Personal and team Latestfiles MUST contain exactly one `profile` block. Org Latestfiles MAY contain a `profile` block but MUST NOT contain more than one. Project Latestfiles MUST NOT contain a `profile` block (project files are policies-only; see File Format).
 
 ```hcl
 profile "james" {
@@ -401,7 +401,5 @@ The following are explicitly deferred:
 1. Should `context` blocks be allowed to *override* personal tool config (e.g., different privacy settings at work via vendor fields), or only add new entities?
 2. Should the spec define a standard way to express AI spend or token limits at the org level?
 3. How should the spec handle tools that don't have a registry entry (custom internal tools)?
-4. Should `profile` be implicit (one per file) rather than a named block?
-5. What is the resolution order when a personal `policy` and an imported org `policy` conflict — does org win, personal win, or is it a validation error?
-6. Is one `profile` block per file required, or can a file have zero `profile` blocks (e.g., a pure org file)?
-7. Should `latestfile_version` use semver or a simpler `MAJOR.MINOR` scheme?
+4. What is the resolution order when a personal `policy` and an imported org `policy` conflict — does org win, personal win, or is it a validation error?
+5. Should `latestfile_version` use semver or a simpler `MAJOR.MINOR` scheme?
