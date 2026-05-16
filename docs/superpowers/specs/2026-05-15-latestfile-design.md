@@ -155,7 +155,9 @@ tool "cursor" {
 }
 ```
 
-The `from` field, if present, MUST use the `registry:` URI scheme: `registry:<namespace>/<name>`. The namespace and name MUST each match `[a-z0-9][a-z0-9-]*`. Parsers MUST NOT require registry resolution to parse a file; a missing or unreachable registry is not a parse or validation error.
+The `from` field is OPTIONAL. When present, it MUST use the `registry:` URI scheme: `registry:<namespace>/<name>`. The namespace and name MUST each match `[a-z0-9][a-z0-9-]*`. Parsers MUST NOT require registry resolution to parse a file; a missing or unreachable registry is not a parse or validation error.
+
+A `tool` block without `from` is valid. It declares a tool that has no canonical registry definition (e.g., a proprietary internal tool, a fork, or a tool whose vendor has not registered). Such tools have no vendor schema available, so their vendor fields cannot be validated. Tooling MAY surface this as informational signal.
 
 The `version` field, if present, MUST be a semver constraint string.
 
@@ -400,6 +402,5 @@ The following are explicitly deferred:
 
 1. Should `context` blocks be allowed to *override* personal tool config (e.g., different privacy settings at work via vendor fields), or only add new entities?
 2. Should the spec define a standard way to express AI spend or token limits at the org level?
-3. How should the spec handle tools that don't have a registry entry (custom internal tools)?
-4. What is the resolution order when a personal `policy` and an imported org `policy` conflict — does org win, personal win, or is it a validation error?
-5. Should `latestfile_version` use semver or a simpler `MAJOR.MINOR` scheme?
+3. What is the resolution order when a personal `policy` and an imported org `policy` conflict — does org win, personal win, or is it a validation error?
+4. Should `latestfile_version` use semver or a simpler `MAJOR.MINOR` scheme?
