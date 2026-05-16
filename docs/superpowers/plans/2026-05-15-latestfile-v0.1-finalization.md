@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Finalize the Latestfile v0.1 spec and produce the companion artifacts (JSON Schema + reference Latestfiles) that make the spec self-contained and validatable, without building any runtime tooling.
+**Goal:** Finalize the Latestfile v0.1 spec and produce the companion artifacts (JSON Schema + reference Latestfiles) that make the spec JSON-validatable, with HCL examples manually paired to canonical JSON. No runtime tooling — HCL → JSON conversion remains the user's responsibility (using any HCL2 parser) until a future spec version.
 
 **Architecture:** The spec defines the format. The JSON Schema validates the canonical JSON representation of a Latestfile. Reference Latestfiles serve as both documentation and conformance test fixtures. All artifacts live in the same repo under `docs/superpowers/specs/`, `schemas/`, and `examples/`.
 
@@ -72,6 +72,34 @@ git commit -m "Resolve profile cardinality in v0.1 spec"
 - [ ] **Step 3:** Remove the resolved open question.
 
 - [ ] **Step 4:** Commit.
+
+### Task 4.5: Resolve canonical Latestfile import/address format
+
+**Files:**
+- Modify: `docs/superpowers/specs/2026-05-15-latestfile-design.md` (File Name and Location table + context.import description)
+
+The spec currently mixes three address forms across sections: `github.com/<org>/<team>/latestfile`, `github.com/<org>/latestfile`, and the import-field description uses `github.com/<org>/<repo>`. These need to be unified.
+
+- [ ] **Step 1:** Discuss with user: pick a single canonical form. Recommendation: `github.com/<org>/<repo>[@<ref>]` for all team/org imports, with the team-vs-org distinction conveyed by what's inside the repo (a `latestfile` declaring `profile` for org vs. team-specific entities for team), not by URL shape.
+
+- [ ] **Step 2:** Update the File Name and Location table and the `import` field description to use the unified form consistently.
+
+- [ ] **Step 3:** Update any example imports (`context "work" { import = "..." }`) to use the canonical form.
+
+- [ ] **Step 4:** Commit.
+
+### Task 4.6: Define applies_to semantics under policy accumulation
+
+**Files:**
+- Modify: `docs/superpowers/specs/2026-05-15-latestfile-design.md` (Composition Model rule #4 + Policy section)
+
+The current rule says `denies` and `requires` lists union under accumulation, but doesn't say how `applies_to` interacts. Open question: if a personal policy denies `**/.env*` `applies_to = [tool.cursor]` and an org policy denies the same globs `applies_to = [tool.claude-code]`, is the union (a) globally applied to all tools, (b) applied only to the named tools per policy, or (c) something else?
+
+- [ ] **Step 1:** Discuss with user: pick a stance. Recommendation: `applies_to` is per-policy and the policies remain independent (option b) — accumulation means "all in-scope policies apply individually", not "their constraints merge into a single super-policy". An empty `applies_to` means "applies to all tools".
+
+- [ ] **Step 2:** Document the rule in the Policy section and reference it from Composition Model rule #4.
+
+- [ ] **Step 3:** Commit.
 
 ### Task 5: Mark remaining questions as v0.2 deferrals
 
@@ -176,7 +204,7 @@ git commit -m "Add JSON Schema skeleton for Latestfile v0.1"
 
 - [ ] **Step 1:** For each remaining block type, add a `$defs` entry following the same pattern as `tool`. Match the reserved field list in the spec.
 
-- [ ] **Step 2:** For `context`, encode the rule that `import` is optional and that the `org.` prefix is only valid when `import` is present. (Note: JSON Schema can't fully enforce cross-field reference semantics — flag this as a validation-tier rule, not a schema rule, in a comment.)
+- [ ] **Step 2:** For `context`, encode only structural rules: `import` is optional; if present, it's a string matching the canonical import format. Do NOT attempt to encode "the `org.` prefix is only valid when `import` is present" — that's a semantic rule the schema cannot enforce. Reference-shaped strings (`tool.cursor`, `org.model["x"]`) are validated structurally only.
 
 - [ ] **Step 3:** Wire all definitions into the top-level schema.
 
@@ -241,7 +269,9 @@ git commit -m "Add personal reference Latestfile (HCL + JSON)"
 - Create: `examples/team/latestfile`
 - Create: `examples/team/latestfile.json`
 
-- [ ] **Step 1:** Write a team Latestfile (fictitious "platform-team" at "acme") — should include team-required workflows, approved tools, and team-level policies. No `profile` block (team file).
+**Depends on:** Task 1 (profile cardinality decision determines whether team files include a `profile` block).
+
+- [ ] **Step 1:** Write a team Latestfile (fictitious "platform-team" at "acme") — should include team-required workflows, approved tools, and team-level policies. The presence or absence of a `profile` block is determined by Task 1's resolution: include it if Task 1 made `profile` required for team files, omit it if Task 1 made it optional/personal-only.
 
 - [ ] **Step 2:** Write the JSON equivalent.
 
@@ -281,7 +311,7 @@ git commit -m "Add personal reference Latestfile (HCL + JSON)"
 
 - [ ] **Step 1:** Use any JSON Schema 2020-12 validator (e.g., `jsonschema` Python CLI, `ajv-cli`) to validate each `.json` example against the schema. Run with the user's available tooling — if no CLI is available, dispatch a subagent to do the validation.
 
-- [ ] **Step 2:** Fix any mismatches between the schema and the examples. Bias toward fixing the schema, since the examples define what real Latestfiles should look like.
+- [ ] **Step 2:** Fix any mismatches by identifying which artifact contradicts the spec. The spec is the source of truth. If the spec is ambiguous, update the spec first, then bring the schema and examples into alignment.
 
 - [ ] **Step 3:** Commit any fixes.
 
@@ -309,7 +339,8 @@ git commit -m "Add personal reference Latestfile (HCL + JSON)"
 **Files:**
 - `docs/superpowers/specs/2026-05-15-latestfile-design.md`
 - `schemas/latestfile-v0.1.schema.json`
-- `examples/*.latestfile*`
+- `schemas/README.md`
+- `examples/**/*` (all files under `examples/`, including the dot-prefixed `.latestfile` files)
 
 - [ ] **Step 1:** Dispatch a subagent reviewer with full context (spec + schema + all examples). Ask for final consistency check and any remaining ambiguities.
 
@@ -329,6 +360,7 @@ git commit -m "Add personal reference Latestfile (HCL + JSON)"
 - [ ] **Step 3:** Commit and tag if approved.
 
 ```bash
+git add docs/superpowers/specs/2026-05-15-latestfile-design.md
 git commit -m "Freeze Latestfile spec at v0.1 (pending launch)"
 git tag spec-v0.1
 ```
