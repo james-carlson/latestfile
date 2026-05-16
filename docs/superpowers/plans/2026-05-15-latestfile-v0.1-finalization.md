@@ -76,11 +76,19 @@ git commit -m "Resolve profile cardinality in v0.1 spec"
 ### Task 5: Mark remaining questions as v0.2 deferrals
 
 **Files:**
-- Modify: `docs/superpowers/specs/2026-05-15-latestfile-design.md` (Open Questions section)
+- Modify: `docs/superpowers/specs/2026-05-15-latestfile-design.md` (Open Questions section + cross-references)
 
-- [ ] **Step 1:** For any remaining questions (likely #1 vendor field overrides, #2 spend/token limits), rename the section to "Deferred to Future Versions" and write a one-sentence rationale for each.
+The remaining questions after Tasks 1-4 are:
+- OQ #1: Should `context` blocks override vendor field values?
+- OQ #2: Standard way to express AI spend or token limits at org level?
 
-- [ ] **Step 2:** Commit.
+- [ ] **Step 1:** Rename the section to "Deferred to Future Versions". Add a one-sentence rationale for each:
+  - OQ #1: Defer until real users hit the constraint of context-invariant vendor fields.
+  - OQ #2: Defer until tool vendors propose a standard shape (currently varies wildly per provider).
+
+- [ ] **Step 2:** Audit the spec for prose that references "open question for future versions" (e.g., Composition Model rule #5 mentions OQ #1, and the policy accumulation rule references OQ #5). Update each callsite to point at the now-renamed "Deferred to Future Versions" section by name rather than by number.
+
+- [ ] **Step 3:** Commit.
 
 ---
 
@@ -199,11 +207,20 @@ git commit -m "Add all block definitions to Latestfile JSON Schema"
 
 These serve as documentation and as fixtures for validating the schema is correct. Each example should be in both HCL and JSON form.
 
+**Note on example file naming.** Each example is placed in a subdirectory matching its scope so that the file itself uses the canonical name from the spec (no invented `.latestfile` extension). Following HCL2's convention (`.tf` and `.tf.json`), the canonical JSON form is the same basename with a `.json` suffix.
+
+| Scope | HCL file | JSON file |
+|---|---|---|
+| Personal | `examples/personal/.latestfile` | `examples/personal/.latestfile.json` |
+| Team | `examples/team/latestfile` | `examples/team/latestfile.json` |
+| Org | `examples/org/latestfile` | `examples/org/latestfile.json` |
+| Project | `examples/project/.latestfile` | `examples/project/.latestfile.json` |
+
 ### Task 11: Personal reference Latestfile (HCL + JSON)
 
 **Files:**
-- Create: `examples/personal.latestfile`
-- Create: `examples/personal.latestfile.json`
+- Create: `examples/personal/.latestfile`
+- Create: `examples/personal/.latestfile.json`
 
 - [ ] **Step 1:** Discuss with user: should this be James's actual setup or a generic example? Recommendation: generic example labeled "Example: Solo Engineer" so it's shareable as a template.
 
@@ -214,15 +231,15 @@ These serve as documentation and as fixtures for validating the schema is correc
 - [ ] **Step 4:** Commit.
 
 ```bash
-git add examples/personal.latestfile examples/personal.latestfile.json
+git add examples/personal/.latestfile examples/personal/.latestfile.json
 git commit -m "Add personal reference Latestfile (HCL + JSON)"
 ```
 
 ### Task 12: Team reference Latestfile
 
 **Files:**
-- Create: `examples/team.latestfile`
-- Create: `examples/team.latestfile.json`
+- Create: `examples/team/latestfile`
+- Create: `examples/team/latestfile.json`
 
 - [ ] **Step 1:** Write a team Latestfile (fictitious "platform-team" at "acme") — should include team-required workflows, approved tools, and team-level policies. No `profile` block (team file).
 
@@ -233,8 +250,8 @@ git commit -m "Add personal reference Latestfile (HCL + JSON)"
 ### Task 13: Org reference Latestfile
 
 **Files:**
-- Create: `examples/org.latestfile`
-- Create: `examples/org.latestfile.json`
+- Create: `examples/org/latestfile`
+- Create: `examples/org/latestfile.json`
 
 - [ ] **Step 1:** Write an org Latestfile (fictitious "acme") — should include enterprise-account references via vendor fields (e.g., `azure_tenant`), org-wide policies, org-approved tools.
 
@@ -245,8 +262,8 @@ git commit -m "Add personal reference Latestfile (HCL + JSON)"
 ### Task 14: Project reference Latestfile
 
 **Files:**
-- Create: `examples/project.latestfile`
-- Create: `examples/project.latestfile.json`
+- Create: `examples/project/.latestfile`
+- Create: `examples/project/.latestfile.json`
 
 - [ ] **Step 1:** Write a project-level Latestfile — policies only, demonstrating the `denies` glob pattern. Should have a comment explaining the constraint that only `policy` blocks are allowed.
 
@@ -256,8 +273,10 @@ git commit -m "Add personal reference Latestfile (HCL + JSON)"
 
 ### Task 15: Validate all examples against the schema
 
+**Depends on:** Tasks 9 (schema complete) and 11-14 (all examples written). If Phase 4 is parallelized, this task must gate on all four example tasks.
+
 **Files:**
-- All `examples/*.latestfile.json` files
+- All `examples/*/latestfile.json` and `examples/*/.latestfile.json` files
 - `schemas/latestfile-v0.1.schema.json`
 
 - [ ] **Step 1:** Use any JSON Schema 2020-12 validator (e.g., `jsonschema` Python CLI, `ajv-cli`) to validate each `.json` example against the schema. Run with the user's available tooling — if no CLI is available, dispatch a subagent to do the validation.
