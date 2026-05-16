@@ -18,9 +18,9 @@ The v1 deliverable is this specification (an RFC). No tooling, registry implemen
 
 ## Motivation
 
-AI-assisted development is becoming central to how software is built, but there is no standard way to describe, share, or compare AI setups. A developer cannot easily communicate their setup to a colleague. An organization cannot reason about its AI posture across teams. There is no common language for correlating AI configuration choices with development outcomes.
+AI-assisted development is becoming central to how software is built, but there is no standard way to declare an AI setup in a form that travels with the developer or organization. Existing artifacts — dotfiles, CLAUDE.md, Cursor settings, MDM policies, CI rules — each capture a slice, but none describe the whole picture in a portable, diffable format.
 
-Latestfile defines that language.
+Latestfile is a portable declaration of how a person, team, or organization uses AI in development. The v1 deliverable is the file format itself. Downstream uses — sharing, validation, comparison, rendering, outcomes correlation — are enabled by the format but are not delivered by this specification.
 
 ---
 
@@ -32,9 +32,11 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "S
 
 ## Core Concepts
 
-### Identity, Not Configuration
+### Portable Declaration
 
-A Latestfile describes *who you are* as an AI-augmented developer or organization — which tools you use, which models, which workflows, which policies. It is closer to a profile or identity document than a project config file.
+A Latestfile is a portable declaration of an AI development setup — which tools, which models, which workflows, which policies. Unlike repo-level config (a `package.json`, a `.cursorrules`) which describes a project, a Latestfile describes the actor and travels with them across projects.
+
+This positions Latestfile alongside, not in place of, existing configuration artifacts. CLAUDE.md, `.cursorrules`, IDE settings, MDM policies, and CI rules each remain authoritative for their domains. A Latestfile *references* those artifacts (e.g., via the `instructions` block) and declares the higher-level shape of a setup: who uses what, how, and under what constraints.
 
 ### Composition Over Inheritance
 
@@ -43,6 +45,24 @@ Latestfiles compose. An individual's Latestfile can import an org's Latestfile v
 ### Contexts
 
 A single individual operates in multiple contexts: at home with personal tools, at work with enterprise tools and org policies. Contexts are named compositions within a personal Latestfile that reference external org or team files.
+
+### Composition Model
+
+Three scopes can be composed at runtime by tooling that reads Latestfiles:
+
+| Scope | Provides |
+|---|---|
+| Personal | Baseline identity — tools, models, workflows, contexts |
+| Org / Team (imported via `context.import`) | Required tools, approved models, policies, enterprise constraints |
+| Project (`<repo>/.latestfile`, policies only) | Project-specific policy overlays |
+
+The composition rules:
+
+1. A personal Latestfile is the entry point. Tooling resolves the active `context` (e.g., `home`, `work`) to determine which entities are in scope.
+2. If the active context declares an `import`, the imported org/team Latestfile is layered in. Entities declared in the org file are referenced via `org.*` and combine with the personal set declared in the context.
+3. If a project Latestfile is present at the codebase being worked in, its policies are layered on top of the resolved personal + org policies.
+4. Policies do not override each other in v1 — they accumulate. The accumulation semantics are: `denies` lists are unioned across all in-scope policies (a file matched by any policy is denied); `requires` lists are unioned (all required entities must be present). Two policies with the same name across scopes are treated as distinct policies, not as overrides. Conflict resolution between contradictory policies (e.g., one policy `requires` a workflow that another `denies` access to) is an open question for future versions.
+5. In v1, no level overrides the vendor field values of entities defined at another level. A `tool` block's vendor config (e.g., `privacy_mode`) is authoritative wherever the block is defined. Whether to allow context-level overrides is an open question for future versions (see below).
 
 ---
 
@@ -59,6 +79,21 @@ A single individual operates in multiple contexts: at home with personal tools, 
 
 A project-level Latestfile MUST only declare `policy` blocks. It MUST NOT declare `tool`, `model`, `workflow`, `instructions`, `context`, or `profile` blocks.
 
+### Project-Level Discovery
+
+Tooling that operates inside a codebase SHOULD discover a project-level Latestfile by checking for `.latestfile` at the repository root. The repository root is identified as the nearest enclosing directory containing a `.git` directory. Tooling MUST NOT walk past the repository root in search of a project-level Latestfile.
+
+Example project Latestfile:
+
+```hcl
+latestfile_version = "0.1"
+
+policy "no-ai-on-migrations" {
+  description = "Declares intent that database migrations be written without AI assistance"
+  denies      = ["db/migrations/**"]
+}
+```
+
 ### Version Declaration
 
 Every Latestfile MUST begin with a version declaration:
@@ -67,7 +102,7 @@ Every Latestfile MUST begin with a version declaration:
 latestfile_version = "0.1"
 ```
 
-The value MUST be a string in `MAJOR.MINOR` format. Parsers MUST ignore unknown fields and unknown block types rather than error. This ensures forward compatibility as the spec evolves.
+The value MUST be a string in `MAJOR.MINOR` format. Parsers MUST tolerate unknown fields and unknown block types — they MUST NOT halt or error on them. This ensures forward compatibility as the spec evolves. Validators SHOULD warn when they encounter unknown block types or unknown fields within known blocks, since these are most often typos (e.g., `wrkflow` instead of `workflow`) rather than forward-compat extensions.
 
 ### Identifiers
 
@@ -92,7 +127,7 @@ A conformant parser MUST distinguish between two error classes:
 - **Parse error** — the file is not valid syntax (malformed block, unclosed brace, invalid assignment). Parsers MUST halt and report the location.
 - **Validation error** — the file is syntactically valid but violates a normative constraint (undefined reference, reserved field used as vendor field, project-level file containing a non-`policy` block). Parsers SHOULD collect and report all validation errors before halting.
 
-Unknown block types and unknown fields within known blocks are NOT errors. Parsers MUST silently ignore them.
+Unknown block types and unknown fields within known blocks are NOT parse or validation errors. Parsers MUST tolerate them. Validators SHOULD report them as warnings to surface typos.
 
 ---
 
@@ -173,17 +208,17 @@ The `source` field MUST be a relative file path (relative to the Latestfile's lo
 
 ### `policy`
 
-A rule declaring intent about AI tool behavior. Policies are descriptive in v1 — they express intent but carry no enforcement mechanism. A future spec version may define enforcement semantics.
+A rule declaring intent about AI tool behavior. Policies are advisory in v1 — they express intent but carry no enforcement mechanism. A future spec version may define enforcement semantics.
 
 ```hcl
 policy "no-ai-on-secrets" {
-  description = "AI tools cannot read secret files"
+  description = "Declares intent to deny AI tools access to secret files"
   denies      = ["**/.env*", "**/secrets/**", "**/*.pem"]
   applies_to  = [tool["claude-code"], tool.cursor]
 }
 
 policy "require-review-workflow" {
-  description = "All PRs must use the code-review workflow"
+  description = "Declares intent that all PRs use the code-review workflow"
   requires    = [workflow["code-review"]]
 }
 ```
@@ -207,7 +242,11 @@ context "work" {
 }
 ```
 
-**The `import` field** MUST be a `github.com/<org>/<repo>` path pointing to a repository containing a `latestfile` file at its root. A context block MUST NOT have more than one `import` field.
+**The `import` field** MUST be a `github.com/<org>/<repo>` path pointing to a repository containing a `latestfile` file at its root. The path MAY include a ref (branch, tag, or commit SHA) using the `@<ref>` suffix: `github.com/acme/latestfile@v1.2.0`. If no ref is specified, tooling SHOULD resolve to the default branch and SHOULD warn that the import is unpinned. A context block MUST NOT have more than one `import` field.
+
+**Import failure behavior.** If an imported Latestfile cannot be resolved (network failure, repository moved, ref no longer exists), tooling MUST treat references to `org.*` entities as unresolved validation errors. Tooling SHOULD continue parsing the rest of the file and report the import failure clearly. Tooling MAY cache resolved imports; cache invalidation is implementation-defined.
+
+**Import trust.** The import mechanism follows the trust model of the underlying transport (HTTPS to github.com). Tooling MUST validate TLS certificates. Signing and verification of imported Latestfiles are out of scope for v1.
 
 **The `org.` prefix** is available only within a `context` block that declares an `import`. It accesses entities defined in the imported Latestfile. The supported forms are: `org.tool.<name>`, `org.model.<name>`, `org.workflow.<name>`, `org.policy.<name>`, `org.instructions.<name>`. Referencing `org.*` without a declared `import` is a validation error.
 
@@ -290,7 +329,7 @@ instructions "global" {
 }
 
 policy "no-ai-on-secrets" {
-  description = "AI tools cannot read secret files"
+  description = "Declares intent to deny AI tools access to secret files"
   denies      = ["**/.env*", "**/secrets/**"]
   applies_to  = [tool["claude-code"], tool.cursor]
 }
@@ -335,7 +374,7 @@ The following field names are reserved across all block types and MUST NOT be us
 ## Versioning and Evolution
 
 - The spec version is declared with `latestfile_version` at the top of every file.
-- Parsers MUST silently ignore unknown block types and unknown fields within known blocks.
+- Parsers MUST tolerate unknown block types and unknown fields within known blocks. Validators SHOULD warn on them to catch typos.
 - New reserved field names introduced in future spec versions will be listed in a migration guide.
 - Breaking changes — removing block types, changing field semantics, tightening validation — require a major version increment.
 - Additive changes — new block types, new optional fields — increment the minor version.
