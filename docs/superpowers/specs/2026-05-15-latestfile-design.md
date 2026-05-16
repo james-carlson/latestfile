@@ -102,7 +102,9 @@ Every Latestfile MUST begin with a version declaration:
 latestfile_version = "0.1"
 ```
 
-The value MUST be a string in `MAJOR.MINOR` format. Parsers MUST tolerate unknown fields and unknown block types — they MUST NOT halt or error on them. This ensures forward compatibility as the spec evolves. Validators SHOULD warn when they encounter unknown block types or unknown fields within known blocks, since these are most often typos (e.g., `wrkflow` instead of `workflow`) rather than forward-compat extensions.
+The value MUST be a string matching the pattern `^[0-9]+\.[0-9]+$` — two non-negative integers separated by a period, `MAJOR.MINOR`. The spec deliberately does not use full semver: clarification-only updates ship as errata against an existing `MAJOR.MINOR` version rather than as a patch bump. See the Versioning and Evolution section for what triggers a MAJOR vs. MINOR increment.
+
+Parsers MUST tolerate unknown fields and unknown block types — they MUST NOT halt or error on them. This ensures forward compatibility as the spec evolves. Validators SHOULD warn when they encounter unknown block types or unknown fields within known blocks, since these are most often typos (e.g., `wrkflow` instead of `workflow`) rather than forward-compat extensions.
 
 ### Identifiers
 
@@ -403,4 +405,3 @@ The following are explicitly deferred:
 1. Should `context` blocks be allowed to *override* personal tool config (e.g., different privacy settings at work via vendor fields), or only add new entities?
 2. Should the spec define a standard way to express AI spend or token limits at the org level?
 3. What is the resolution order when a personal `policy` and an imported org `policy` conflict — does org win, personal win, or is it a validation error?
-4. Should `latestfile_version` use semver or a simpler `MAJOR.MINOR` scheme?
