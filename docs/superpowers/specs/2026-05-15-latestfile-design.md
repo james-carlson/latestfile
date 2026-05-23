@@ -419,7 +419,10 @@ The following are explicitly deferred:
 
 ---
 
-## Open Questions
+## Deferred to Future Versions
 
-1. Should `context` blocks be allowed to *override* personal tool config (e.g., different privacy settings at work via vendor fields), or only add new entities?
-2. Should the spec define a standard way to express AI spend or token limits at the org level?
+The following questions are intentionally left open in v0.1 and will be revisited in a future spec version:
+
+1. **Context-level overrides of vendor fields** — should `context` blocks be allowed to override the vendor fields of a tool/model declared at the file level (e.g., different `privacy_mode` settings at work vs. home)? Deferred until real users hit the friction of context-invariant vendor fields. The v0.1 stance (Composition Model rule 3) is that vendor fields are authoritative wherever the entity is declared.
+
+2. **Org-level spend and token limits** — should the spec define a standard way to express AI spend caps or token rate limits at the org level? Deferred until tool vendors converge on a common shape; current quota mechanisms vary widely per provider (per-key, per-tenant, per-deployment).
