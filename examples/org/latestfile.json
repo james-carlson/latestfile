@@ -1,0 +1,53 @@
+{
+  "latestfile_version": "0.1",
+  "scope": "org",
+  "tool": {
+    "claude-code": {
+      "from": "registry:anthropic/claude-code",
+      "version": ">=1.0",
+      "provider": "anthropic"
+    },
+    "cursor-enterprise": {
+      "from": "registry:anysphere/cursor",
+      "version": ">=0.45",
+      "provider": "anysphere",
+      "enterprise_account": "acme-prod",
+      "privacy_mode": true
+    }
+  },
+  "model": {
+    "claude-sonnet": {
+      "from": "registry:anthropic/claude-sonnet-4-6",
+      "provider": "anthropic"
+    },
+    "gpt4-azure": {
+      "from": "registry:openai/gpt-4o",
+      "provider": "openai",
+      "endpoint": "https://acme.openai.azure.com",
+      "azure_tenant": "acme-corp"
+    }
+  },
+  "workflow": {
+    "security-review": {
+      "description": "Org-wide security review: AI-assisted threat modeling and dependency audit before any production push",
+      "uses": ["${tool[\"claude-code\"]}"],
+      "models": ["${model[\"claude-sonnet\"]}"]
+    },
+    "incident-response": {
+      "description": "On-call incident response: AI-assisted log triage, runbook lookup, and status-page drafting",
+      "uses": ["${tool[\"claude-code\"]}", "${tool[\"cursor-enterprise\"]}"],
+      "models": ["${model[\"claude-sonnet\"]}", "${model[\"gpt4-azure\"]}"]
+    }
+  },
+  "instructions": {
+    "acme-ai-guidelines": {
+      "source": "./acme-ai-policy.md",
+      "applies_to": ["${tool[\"claude-code\"]}", "${tool[\"cursor-enterprise\"]}"]
+    }
+  },
+  "profile": {
+    "acme": {
+      "role": "organization"
+    }
+  }
+}

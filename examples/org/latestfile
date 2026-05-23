@@ -1,0 +1,105 @@
+# Example: Org Latestfile — acme
+#
+# A reference org-scope Latestfile demonstrating the full set of v0.1
+# entity types as they apply to an organization. An org Latestfile is
+# the canonical artifact that gets published to a registry under the
+# org's namespace (e.g., `registry:acme`). Individual members reference
+# it from their personal Latestfiles via `context.import = "registry:acme@v1.2"`,
+# composing org-provided baselines under personal identity.
+#
+# Differences from personal and team Latestfiles:
+#   - `scope = "org"` (not `"personal"` or `"team"`).
+#   - File name has NO leading dot (`latestfile`, not `.latestfile`),
+#     same as the team file. Only project-scope files are discovered
+#     by convention at a repo root; org files live wherever the org
+#     chooses (typically a published registry).
+#   - The `profile` block is OPTIONAL (MAY appear at most once).
+#     We include one below to demonstrate naming the org itself.
+#   - Tools and models commonly reference enterprise-tier accounts
+#     and endpoints via vendor-defined fields (e.g., `enterprise_account`,
+#     `azure_tenant`, `endpoint`). These fields are vendor-defined; the
+#     reserved set is small (`from`, `version`, `provider`) and the rest
+#     is up to the vendor's schema.
+
+latestfile_version = "0.1"
+scope              = "org"
+
+# --- Tools ---
+# Org-approved tools. The `cursor-enterprise` block shows enterprise
+# vendor fields: `enterprise_account` names the org's Cursor enterprise
+# tenant; `privacy_mode = true` is the org default for Cursor usage.
+# These are vendor-defined fields — the spec reserves only `from`,
+# `version`, and `provider`.
+
+tool "claude-code" {
+  from     = "registry:anthropic/claude-code"
+  version  = ">=1.0"
+  provider = "anthropic"
+}
+
+tool "cursor-enterprise" {
+  from               = "registry:anysphere/cursor"
+  version            = ">=0.45"
+  provider           = "anysphere"
+  enterprise_account = "acme-prod"
+  privacy_mode       = true
+}
+
+# --- Models ---
+# Org-approved models. The `gpt4-azure` model points at an Azure
+# OpenAI deployment hosted in the org's Azure tenant; `endpoint` and
+# `azure_tenant` are vendor-defined fields for the OpenAI/Azure model
+# entity. The name `gpt4-azure` is intentional — the personal
+# reference example imports this file and references
+# `org.model["gpt4-azure"]`, so renaming would dangle that reference.
+
+model "claude-sonnet" {
+  from     = "registry:anthropic/claude-sonnet-4-6"
+  provider = "anthropic"
+}
+
+model "gpt4-azure" {
+  from         = "registry:openai/gpt-4o"
+  provider     = "openai"
+  endpoint     = "https://acme.openai.azure.com"
+  azure_tenant = "acme-corp"
+}
+
+# --- Workflows ---
+# Org-wide processes. Workflows are informational in v0.1 — they carry
+# no enforcement semantics. `uses` and `models` are documentation-only
+# references.
+
+workflow "security-review" {
+  description = "Org-wide security review: AI-assisted threat modeling and dependency audit before any production push"
+  uses        = [tool["claude-code"]]
+  models      = [model["claude-sonnet"]]
+}
+
+workflow "incident-response" {
+  description = "On-call incident response: AI-assisted log triage, runbook lookup, and status-page drafting"
+  uses        = [tool["claude-code"], tool["cursor-enterprise"]]
+  models      = [model["claude-sonnet"], model["gpt4-azure"]]
+}
+
+# --- Instructions ---
+# Shared org-level instructions. The `source` is a path relative to
+# this file (informational — parsers MUST NOT read it). The file name
+# below is colloquially "policy" but the spec's `policy` *block* type
+# was removed in v0.1; this is just a referenced document, not a
+# prescriptive policy block.
+
+instructions "acme-ai-guidelines" {
+  source     = "./acme-ai-policy.md"
+  applies_to = [tool["claude-code"], tool["cursor-enterprise"]]
+}
+
+# --- Profile ---
+# Org Latestfiles MAY contain at most one `profile` block. Including
+# one is OPTIONAL but useful for naming the org itself and surfacing
+# a human-readable identity. `role` is free-form; `"organization"`
+# signals this is an org identity.
+
+profile "acme" {
+  role = "organization"
+}
