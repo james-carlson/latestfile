@@ -74,7 +74,7 @@ latestfile_version          = "0.1"
 policy_conflict_resolution  = "strict"  # file-level default
 
 context "work" {
-  import                      = "github.com/acme/latestfile"
+  import                      = "registry:acme@v1.2"
   policy_conflict_resolution  = ["project", "org", "personal"]  # context override
   tools                       = [tool.cursor]
 }
@@ -98,20 +98,27 @@ context "work" {
 
 ## File Format
 
-### File Name and Location
+### Scope and File Location
 
-| Scope    | Canonical Location                                    |
-|----------|-------------------------------------------------------|
-| Personal | `~/.latestfile` or a personal dotfiles repo           |
-| Team     | `github.com/<org>/<team>/latestfile`                 |
-| Org      | `github.com/<org>/latestfile`                        |
-| Project  | `<repo>/.latestfile` (optional, policies only)       |
+A Latestfile is self-describing via a REQUIRED top-level `scope` field. The spec does not prescribe where personal, team, or org Latestfiles live in version control — that is the author's choice. Identity for sharing and importing comes from the registry (see Registry section), not from file location.
 
-A project-level Latestfile MUST only declare `policy` blocks. It MUST NOT declare `tool`, `model`, `workflow`, `instructions`, `context`, or `profile` blocks.
+```hcl
+latestfile_version = "0.1"
+scope              = "personal"   # | "team" | "org" | "project"
+```
+
+The `scope` field MUST be one of `"personal"`, `"team"`, `"org"`, or `"project"`. The scope determines what content is valid in the file (see Entity Types).
+
+| Scope | Content Constraints |
+|---|---|
+| `personal` | All entity types valid. MUST contain exactly one `profile` block. |
+| `team` | All entity types valid. MUST contain exactly one `profile` block. |
+| `org` | All entity types valid. MAY contain at most one `profile` block. |
+| `project` | Only `policy` blocks. MUST NOT contain `tool`, `model`, `workflow`, `instructions`, `context`, or `profile` blocks. |
 
 ### Project-Level Discovery
 
-Tooling that operates inside a codebase SHOULD discover a project-level Latestfile by checking for `.latestfile` at the repository root. The repository root is identified as the nearest enclosing directory containing a `.git` directory. Tooling MUST NOT walk past the repository root in search of a project-level Latestfile.
+Project Latestfiles are the one exception to "file location is the author's choice." Because project policies attach to a specific codebase rather than to a published identity, tooling that operates inside a codebase MUST discover the project Latestfile by checking for `.latestfile` at the repository root. The repository root is identified as the nearest enclosing directory containing a `.git` directory. Tooling MUST NOT walk past the repository root in search of a project-level Latestfile.
 
 Example project Latestfile:
 
@@ -187,7 +194,7 @@ tool "cursor" {
 }
 ```
 
-The `from` field is OPTIONAL. When present, it MUST use the `registry:` URI scheme: `registry:<namespace>/<name>`. The namespace and name MUST each match `[a-z0-9][a-z0-9-]*`. Parsers MUST NOT require registry resolution to parse a file; a missing or unreachable registry is not a parse or validation error.
+The `from` field is OPTIONAL. When present, it MUST use the `registry:` URI scheme: `registry:[<host>/]<namespace>[/<name>][@<version>]`. The `<host>` defaults to `latest.dev` when omitted. See the Registry section for the full URI grammar. Parsers MUST NOT require registry resolution to parse a file; a missing or unreachable registry is not a parse or validation error.
 
 A `tool` block without `from` is valid. It declares a tool that has no canonical registry definition (e.g., a proprietary internal tool, a fork, or a tool whose vendor has not registered). Such tools have no vendor schema available, so their vendor fields cannot be validated. Tooling MAY surface this as informational signal.
 
@@ -270,17 +277,17 @@ context "home" {
 }
 
 context "work" {
-  import = "github.com/acme/latestfile"
+  import = "registry:acme@v1.2"
   tools  = [tool["claude-code"], tool.cursor]
   models = [model["claude-sonnet"], org.model["gpt4-azure"]]
 }
 ```
 
-**The `import` field** MUST be a `github.com/<org>/<repo>` path pointing to a repository containing a `latestfile` file at its root. The path MAY include a ref (branch, tag, or commit SHA) using the `@<ref>` suffix: `github.com/acme/latestfile@v1.2.0`. If no ref is specified, tooling SHOULD resolve to the default branch and SHOULD warn that the import is unpinned. A context block MUST NOT have more than one `import` field.
+**The `import` field** MUST be a registry URI of the form `registry:[<host>/]<namespace>[/<name>][@<version>]`. See the Registry section for the URI grammar. If `@<version>` is omitted, tooling SHOULD resolve to the latest published version and SHOULD warn that the import is unpinned. A context block MUST NOT have more than one `import` field.
 
-**Import failure behavior.** If an imported Latestfile cannot be resolved (network failure, repository moved, ref no longer exists), tooling MUST treat references to `org.*` entities as unresolved validation errors. Tooling SHOULD continue parsing the rest of the file and report the import failure clearly. Tooling MAY cache resolved imports; cache invalidation is implementation-defined.
+**Import failure behavior.** If an imported Latestfile cannot be resolved (registry unreachable, namespace or name not found, version no longer published), tooling MUST treat references to `org.*` entities as unresolved validation errors. Tooling SHOULD continue parsing the rest of the file and report the import failure clearly. Tooling MAY cache resolved imports; cache invalidation is implementation-defined.
 
-**Import trust.** The import mechanism follows the trust model of the underlying transport (HTTPS to github.com). Tooling MUST validate TLS certificates. Signing and verification of imported Latestfiles are out of scope for v1.
+**Import trust.** The import mechanism follows the trust model of the registry transport. Tooling MUST use HTTPS for registry resolution and MUST validate TLS certificates. Signing and verification of imported Latestfiles are out of scope for v1.
 
 **The `org.` prefix** is available only within a `context` block that declares an `import`. It accesses entities defined in the imported Latestfile. The supported forms are: `org.tool.<name>`, `org.model.<name>`, `org.workflow.<name>`, `org.policy.<name>`, `org.instructions.<name>`. Referencing `org.*` without a declared `import` is a validation error.
 
@@ -313,11 +320,40 @@ Cross-file references are ONLY permitted via the `org.` prefix within a `context
 
 ## Registry
 
-`latest.dev/registry` hosts two kinds of entries. The registry interface is defined here; the registry implementation is out of scope for v1.
+A registry is an addressable service that hosts published Latestfiles and canonical entity definitions. `latest.dev` is the well-known public registry. Anyone — organizations, vendors, individuals — MAY operate their own registry (public or private) so long as it implements the URI resolution semantics defined here.
 
-**Core entity definitions** — canonical definitions of known tools, models, and providers. A `from = "registry:<namespace>/<name>"` field indicates that a canonical definition exists. Parsers MUST NOT require registry access to validate a file.
+### URI Grammar
 
-**Vendor schemas** — tool makers MAY publish a JSON Schema for their vendor-specific fields. When a `tool` block declares `from = "registry:anysphere/cursor"`, tooling MAY validate vendor fields against Anysphere's published schema. Vendor schema registration is opt-in. Files referencing unregistered tools are valid; their vendor fields are unvalidated.
+```
+registry:[<host>/]<namespace>[/<name>][@<version>]
+```
+
+- `<host>` — optional registry hostname. Defaults to `latest.dev` when omitted. When present, MUST be a valid DNS hostname.
+- `<namespace>` — REQUIRED publisher identifier. MUST match `[a-z0-9][a-z0-9-]*`.
+- `<name>` — optional sub-identifier for namespaces that publish multiple Latestfiles or entity definitions. MUST match `[a-z0-9][a-z0-9-]*` when present.
+- `<version>` — optional version pin. When the URI resolves to a Latestfile, MUST match the `latestfile_version` pattern (`MAJOR.MINOR`, optionally with a pre-release suffix). When the URI resolves to a tool or model, MUST be a semver-compatible version string.
+
+Examples:
+
+| URI | Resolves to |
+|---|---|
+| `registry:acme` | `latest.dev`, namespace `acme`, default Latestfile, latest version |
+| `registry:acme@v1.2` | `latest.dev`, namespace `acme`, default Latestfile, version 1.2 |
+| `registry:acme/engineering@v1.2` | `latest.dev`, namespace `acme`, `engineering` Latestfile, version 1.2 |
+| `registry:registry.acme.com/main@v1.2` | private registry, namespace `main`, version 1.2 |
+| `registry:anthropic/claude-code@1.0` | tool definition, namespace `anthropic`, name `claude-code` |
+
+### Registry Content
+
+A registry hosts two kinds of entries:
+
+**Published Latestfiles** — full Latestfiles that organizations, teams, or individuals publish to make them importable. Publishing is what makes a Latestfile a stable identity that others can reference via `context.import`. Where the author keeps the source file (GitHub, GitLab, internal CMS, local disk) is unconstrained by this spec.
+
+**Entity definitions** — canonical definitions of tools and models maintained by vendors (e.g., `registry:anthropic/claude-code`). A `from` field references one of these. Vendors MAY publish JSON Schemas for their vendor-specific fields; tooling MAY validate vendor fields against those schemas. Vendor schema registration is opt-in; files referencing unregistered tools are valid but their vendor fields are unvalidated.
+
+### Out of Scope for v0.1
+
+The publishing protocol, registry HTTP API, authentication, authorization, signing, and naming policy (who owns `acme` on `latest.dev`) are all out of scope for v0.1. The spec defines the URI form and the conceptual model; concrete registry implementations and their governance are deferred.
 
 ---
 
@@ -325,6 +361,7 @@ Cross-file references are ONLY permitted via the `org.` prefix within a `context
 
 ```hcl
 latestfile_version = "0.1"
+scope              = "personal"
 
 tool "claude-code" {
   from     = "registry:anthropic/claude-code"
@@ -374,7 +411,7 @@ context "home" {
 }
 
 context "work" {
-  import = "github.com/acme/latestfile"
+  import = "registry:acme@v1.2"
   tools  = [tool["claude-code"], tool.cursor]
   models = [model["claude-sonnet"], org.model["gpt4-azure"]]
 }
@@ -391,7 +428,7 @@ profile "james" {
 
 The following field names are reserved across all block types and MUST NOT be used as vendor-defined fields:
 
-`from`, `version`, `provider`, `description`, `applies_to`, `uses`, `models`, `import`, `source`, `denies`, `requires`, `role`, `contexts`, `tools`, `policy_conflict_resolution`
+`from`, `version`, `provider`, `description`, `applies_to`, `uses`, `models`, `import`, `source`, `denies`, `requires`, `role`, `contexts`, `tools`, `policy_conflict_resolution`, `scope`
 
 ---
 
@@ -401,7 +438,7 @@ The following field names are reserved across all block types and MUST NOT be us
 
 **Remote URL fetching.** The `instructions.source` field accepts `https://` URLs. Tooling that fetches remote URLs MUST restrict requests to trusted origins and MUST NOT expose responses to untrusted parties. Parsers MUST NOT auto-fetch remote URLs without explicit user action.
 
-**Registry resolution.** The `from` field uses a `registry:` URI. Tooling that resolves registry URIs MUST use HTTPS and MUST validate TLS certificates. Parsers that do not perform registry resolution are not affected.
+**Registry resolution.** The `registry:` URI scheme is used by both `from` (in `tool` and `model` blocks) and `import` (in `context` blocks). Tooling that resolves registry URIs MUST use HTTPS and MUST validate TLS certificates. Tooling that supports private registries MUST allow operators to restrict which registry hostnames are trusted, and MUST NOT silently fall back to a public registry when a private one fails. Parsers that do not perform registry resolution are not affected.
 
 ---
 
