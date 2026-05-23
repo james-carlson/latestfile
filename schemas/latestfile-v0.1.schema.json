@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://latest.dev/schemas/latestfile-v0.1.schema.json",
+  "title": "Latestfile v0.1",
+  "description": "Schema for the canonical JSON form of a Latestfile: a portable declaration of how a developer, team, or organization uses AI in their development workflow.",
+  "type": "object",
+  "required": ["latestfile_version", "scope"],
+  "properties": {
+    "latestfile_version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+$"
+    },
+    "scope": {
+      "type": "string",
+      "enum": ["personal", "team", "org", "project"]
+    },
+    "tool": {
+      "$comment": "Definition added in Task 8",
+      "type": "object"
+    },
+    "model": {
+      "$comment": "Definition added in Task 9",
+      "type": "object"
+    },
+    "workflow": {
+      "$comment": "Definition added in Task 9",
+      "type": "object"
+    },
+    "instructions": {
+      "$comment": "Definition added in Task 9",
+      "type": "object"
+    },
+    "context": {
+      "$comment": "Definition added in Task 9",
+      "type": "object"
+    },
+    "profile": {
+      "$comment": "Definition added in Task 9",
+      "type": "object"
+    }
+  },
+  "additionalProperties": true,
+  "$defs": {}
+}
