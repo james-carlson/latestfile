@@ -103,6 +103,17 @@ largest, cheapest class of errors — structural malformation — at the
 boundary of a toolchain. Where the schema and the spec disagree, the
 spec governs and the schema is the bug.
 
+## Validated Examples
+
+The following reference Latestfiles in this repository are validated against this schema:
+
+- `examples/personal/.latestfile.json` — personal scope
+- `examples/team/latestfile.json` — team scope
+- `examples/org/latestfile.json` — org scope
+- `examples/project/.latestfile.json` — project scope
+
+Each file has a paired HCL form in the same directory.
+
 ## Version
 
 This schema validates Latestfile v0.1. Subsequent MINOR revisions
