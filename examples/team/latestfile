@@ -1,0 +1,107 @@
+# Example: Team Latestfile — acme platform-team
+#
+# A reference team-scope Latestfile demonstrating the full set of v0.1
+# entity types as they apply to a team. A team Latestfile describes a
+# team as an actor: it standardizes the tools and models the team has
+# adopted, captures shared workflows, and points at shared instructions.
+#
+# Differences from a personal Latestfile:
+#   - `scope = "team"` (not `"personal"`).
+#   - File name has NO leading dot (`latestfile`, not `.latestfile`).
+#     Only project-scope files are discovered by convention at a repo
+#     root; team files live wherever the team chooses.
+#   - The single `profile` block represents the team identity, not a
+#     person. `role` is free-form; we use `"team"` here.
+#   - Content is intentionally generic and team-wide. Individual
+#     members' personal Latestfiles can `import` this file via a
+#     `context.import` referencing this file's registry URI, layering
+#     team baselines under personal identity.
+
+latestfile_version = "0.1"
+scope              = "team"
+
+# --- Tools ---
+# Tools the team has standardized on. These are the AI development
+# tools that team members are expected to have available; specific
+# vendor settings (autocomplete, privacy_mode, etc.) reflect team
+# defaults, not per-person preferences.
+
+tool "claude-code" {
+  from     = "registry:anthropic/claude-code"
+  version  = ">=1.0"
+  provider = "anthropic"
+}
+
+tool "cursor" {
+  from         = "registry:anysphere/cursor"
+  version      = ">=0.45"
+  provider     = "anysphere"
+  autocomplete = true
+  privacy_mode = true
+}
+
+# --- Models ---
+# Models the team has approved for use. A team Latestfile is purely
+# descriptive in v0.1 — these are the models the team has adopted, not
+# a prescriptive allow-list.
+
+model "claude-sonnet" {
+  from     = "registry:anthropic/claude-sonnet-4-6"
+  provider = "anthropic"
+}
+
+model "claude-opus" {
+  from     = "registry:anthropic/claude-opus-4-7"
+  provider = "anthropic"
+}
+
+# --- Workflows ---
+# Team-specific workflows describing how AI fits into shared processes.
+# Workflows are informational in v0.1; `uses` and `models` are
+# documentation-only references.
+
+workflow "review-with-claude" {
+  description = "Team PR review process: Claude Code drafts a review pass before a human reviewer signs off"
+  uses        = [tool["claude-code"]]
+  models      = [model["claude-opus"]]
+}
+
+workflow "deploy-checklist" {
+  description = "Pre-deploy verification: AI-assisted runbook walkthrough and smoke-test generation"
+  uses        = [tool["claude-code"]]
+  models      = [model["claude-sonnet"]]
+}
+
+# --- Instructions ---
+# Shared instructions that team members layer into their AI sessions
+# when working on team-owned code. The `source` is informational — a
+# path relative to this file. Parsers MUST NOT read it.
+
+instructions "team-conventions" {
+  source     = "./team-conventions.md"
+  applies_to = [tool["claude-code"], tool.cursor]
+}
+
+# --- Context ---
+# A `default` context expresses the team's standard composition: which
+# tools and models a team member operates with when working in the
+# team's domain. The team file isn't required to declare contexts, but
+# this single example illustrates how individual members can import
+# this file and reference `org.context.default` (or layer their own
+# personal contexts on top of the team baseline).
+
+context "default" {
+  tools  = [tool["claude-code"], tool.cursor]
+  models = [model["claude-sonnet"], model["claude-opus"]]
+}
+
+# --- Profile ---
+# Team Latestfiles MUST contain exactly one `profile` block (same rule
+# as personal). The profile names the team and declares the contexts
+# in which the team operates. `role` is a free-form string; `"team"`
+# signals this is a team identity rather than an individual.
+
+profile "platform-team" {
+  role     = "team"
+  contexts = [context.default]
+}
