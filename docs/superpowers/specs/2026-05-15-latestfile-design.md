@@ -188,7 +188,7 @@ Block labels (e.g., `"claude-code"`) become JSON object keys nested under the bl
 
 ## Entity Types
 
-The spec defines seven first-class resource types. Each is a named block. Duplicate block names within the same type are a validation error.
+The spec defines six first-class resource types. Each is a named block. Duplicate block names within the same type are a validation error.
 
 ### `tool`
 
