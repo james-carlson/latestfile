@@ -12,6 +12,8 @@ Latestfile is an open specification for declaring how a developer, team, or orga
 
 The format uses HCL-inspired named entity blocks: typed, named resources with cross-references between them. Files are human-readable, machine-parseable, diffable, and version-controlled.
 
+**This specification is descriptive, not prescriptive.** It defines how to *describe* an AI development setup — which tools, models, workflows, and instructions are in use. It does not define how to *prescribe* one — rules, governance, mandates, policies, or enforcement semantics. Prescription is intentionally out of scope here and may be addressed by a separate companion specification rather than as a future version of this document. The distinction lets the descriptive layer stabilize and gain adoption without being entangled in the harder, more contested questions that prescription raises.
+
 The v1 deliverable is this specification (an RFC). No tooling, registry implementation, builder UI, or analytics layer is in scope for v1.
 
 ---
@@ -412,7 +414,7 @@ The following are explicitly deferred:
 - Builder UI for generating Latestfiles
 - CLI validation tooling
 - Analytics and outcomes correlation
-- Policies, enforcement, and any prescription-style mechanisms (deferred to v0.2; v0.1 is purely descriptive)
+- Policies, enforcement, governance, and any prescription-style mechanisms. This is intentional and structural, not a deferral: the descriptive vs. prescriptive split runs through the whole spec. A separate prescriptive specification — covering policies, mandates, conflict resolution, and enforcement semantics — is contemplated as future work, possibly as a companion RFC rather than as a successor version of this document.
 - Team and org aggregation tooling
 - Authentication or signing of Latestfiles
 - Formal ABNF grammar (deferred to v1.0 RFC)
