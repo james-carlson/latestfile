@@ -149,6 +149,43 @@ Unknown block types and unknown fields within known blocks are NOT parse or vali
 
 ---
 
+## Canonical JSON Representation
+
+Latestfiles MAY be expressed in HCL2 native syntax (the canonical form used throughout this document) or in HCL2's equivalent JSON form. Both forms are normative and carry identical semantics; tooling MUST accept either. Files in JSON form SHOULD use the `.json` suffix (e.g., `.latestfile.json`) to disambiguate from native HCL.
+
+The grammar of each form is defined externally and is not restated here:
+
+- HCL2 native syntax: <https://github.com/hashicorp/hcl/blob/main/hclsyntax/spec.md>
+- HCL2 JSON equivalent: <https://github.com/hashicorp/hcl/blob/main/json/spec.md>
+
+The JSON Schema published alongside this specification validates the JSON form. Files in HCL2 native syntax MUST be converted to the JSON form before schema validation; the mapping is defined by the HCL2 JSON specification linked above.
+
+The following two representations of the same `tool` block are equivalent:
+
+```hcl
+tool "claude-code" {
+  from     = "registry:anthropic/claude-code"
+  version  = ">=1.0"
+  provider = "anthropic"
+}
+```
+
+```json
+{
+  "tool": {
+    "claude-code": {
+      "from": "registry:anthropic/claude-code",
+      "version": ">=1.0",
+      "provider": "anthropic"
+    }
+  }
+}
+```
+
+Block labels (e.g., `"claude-code"`) become JSON object keys nested under the block type. Attribute assignments become JSON properties. Reference expressions (e.g., `tool["claude-code"]`) are represented in JSON as `${...}` template strings per the HCL2 JSON specification.
+
+---
+
 ## Entity Types
 
 The spec defines seven first-class resource types. Each is a named block. Duplicate block names within the same type are a validation error.
