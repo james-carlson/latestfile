@@ -14,10 +14,7 @@
       "type": "string",
       "enum": ["personal", "team", "org", "project"]
     },
-    "tool": {
-      "$comment": "Definition added in Task 8",
-      "type": "object"
-    },
+    "tool": { "$ref": "#/$defs/toolMap" },
     "model": {
       "$comment": "Definition added in Task 9",
       "type": "object"
@@ -40,5 +37,34 @@
     }
   },
   "additionalProperties": true,
-  "$defs": {}
+  "$defs": {
+    "toolMap": {
+      "type": "object",
+      "description": "Map from tool name (block label) to tool block. Tool names MUST match the identifier pattern [a-zA-Z][a-zA-Z0-9_-]*.",
+      "propertyNames": {
+        "pattern": "^[a-zA-Z][a-zA-Z0-9_-]*$"
+      },
+      "additionalProperties": { "$ref": "#/$defs/toolBlock" }
+    },
+    "toolBlock": {
+      "type": "object",
+      "description": "A tool block. The reserved fields 'from', 'version', and 'provider' are typed; all other fields are vendor-defined and unconstrained.",
+      "properties": {
+        "from": { "$ref": "#/$defs/registryUri" },
+        "version": { "$ref": "#/$defs/semverConstraint" },
+        "provider": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "registryUri": {
+      "type": "string",
+      "description": "A registry URI: registry:[<host>/]<namespace>[/<name>][@<version>]. Hostnames are optional and default to latest.dev. Namespace and name match [a-z0-9][a-z0-9-]*. Version, when present, is a semver-compatible version string.",
+      "pattern": "^registry:(?:[a-z0-9][a-z0-9.-]*[a-z0-9]\\/)?[a-z0-9][a-z0-9-]*(?:\\/[a-z0-9][a-z0-9-]*)?(?:@[A-Za-z0-9._-]+)?$"
+    },
+    "semverConstraint": {
+      "type": "string",
+      "description": "A semver constraint string. Accepts common forms like '1.0', '1.0.0', '>=1.0', '~> 0.45', '^1.2.3', 'v1.2.3-beta'.",
+      "pattern": "^([<>=~^]|=>|<=|>=|~>|\\^)?\\s*v?[0-9]+(\\.[0-9]+)?(\\.[0-9]+)?([-+][A-Za-z0-9.-]+)?$"
+    }
+  }
 }
