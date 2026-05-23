@@ -34,65 +34,32 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "S
 
 ### Portable Declaration
 
-A Latestfile is a portable declaration of an AI development setup — which tools, which models, which workflows, which policies. Unlike repo-level config (a `package.json`, a `.cursorrules`) which describes a project, a Latestfile describes the actor and travels with them across projects.
+A Latestfile is a portable declaration of an AI development setup — which tools, which models, which workflows, which instructions. Unlike repo-level config (a `package.json`, a `.cursorrules`) which describes a project, a Latestfile describes the actor and travels with them across projects.
 
-This positions Latestfile alongside, not in place of, existing configuration artifacts. CLAUDE.md, `.cursorrules`, IDE settings, MDM policies, and CI rules each remain authoritative for their domains. A Latestfile *references* those artifacts (e.g., via the `instructions` block) and declares the higher-level shape of a setup: who uses what, how, and under what constraints.
+This positions Latestfile alongside, not in place of, existing configuration artifacts. CLAUDE.md, `.cursorrules`, IDE settings, MDM policies, and CI rules each remain authoritative for their domains. A Latestfile *references* those artifacts (e.g., via the `instructions` block) and declares the higher-level shape of a setup: who uses what, with which models, in which workflows.
 
 ### Composition Over Inheritance
 
-Latestfiles compose. An individual's Latestfile can import an org's Latestfile via a named context. The org file defines what the org provides and requires; the individual file describes their personal baseline. The composed result — identity plus context — is the effective setup for a given situation.
+Latestfiles compose. An individual's Latestfile can import an org's Latestfile via a named context. The org file defines what the org provides — its approved tools, models, workflows, and instructions. The individual file describes their personal baseline. The composed result — identity plus context — is the effective setup for a given situation.
 
 ### Contexts
 
-A single individual operates in multiple contexts: at home with personal tools, at work with enterprise tools and org policies. Contexts are named compositions within a personal Latestfile that reference external org or team files.
+A single individual operates in multiple contexts: at home with personal tools, at work with enterprise tools and org-provided resources. Contexts are named compositions within a personal Latestfile that reference external org or team files.
 
 ### Composition Model
 
-Three scopes can be composed at runtime by tooling that reads Latestfiles:
+Two scopes compose at runtime when tooling reads Latestfiles:
 
 | Scope | Provides |
 |---|---|
-| Personal | Baseline identity — tools, models, workflows, contexts |
-| Org / Team (imported via `context.import`) | Required tools, approved models, policies, enterprise constraints |
-| Project (`<repo>/.latestfile`, policies only) | Project-specific policy overlays |
+| Personal | Baseline identity — tools, models, workflows, contexts, instructions |
+| Org / Team (imported via `context.import`) | Approved tools, models, workflows, enterprise context |
 
 The composition rules:
 
 1. A personal Latestfile is the entry point. Tooling resolves the active `context` (e.g., `home`, `work`) to determine which entities are in scope.
 2. If the active context declares an `import`, the imported org/team Latestfile is layered in. Entities declared in the org file are referenced via `org.*` and combine with the personal set declared in the context.
-3. If a project Latestfile is present at the codebase being worked in, its policies are layered on top of the resolved personal + org policies.
-4. Policies accumulate across scopes by default. The accumulation semantics are: `denies` lists are unioned across all in-scope policies (a file matched by any policy is denied); `requires` lists are unioned (all required entities must be present). Two policies with the same name across scopes are treated as distinct policies, not as overrides.
-5. **Contradictory policies** (e.g., one policy `requires` a workflow that another effectively `denies` via overlapping globs) are resolved according to the `policy_conflict_resolution` field. See the "Policy Conflict Resolution" subsection below.
-6. In v1, no level overrides the vendor field values of entities defined at another level. A `tool` block's vendor config (e.g., `privacy_mode`) is authoritative wherever the block is defined. Whether to allow context-level overrides is an open question for future versions (see below).
-
-### Policy Conflict Resolution
-
-The OPTIONAL field `policy_conflict_resolution` declares how contradictory policies are resolved during composition. It MAY be declared at the top level of a Latestfile and/or inside a `context` block.
-
-```hcl
-latestfile_version          = "0.1"
-policy_conflict_resolution  = "strict"  # file-level default
-
-context "work" {
-  import                      = "registry:acme@v1.2"
-  policy_conflict_resolution  = ["project", "org", "personal"]  # context override
-  tools                       = [tool.cursor]
-}
-```
-
-**Valid values:**
-
-- `"strict"` — the default if the field is omitted. Contradictory policies are reported as a validation error and tooling halts on them. The human resolves by editing the Latestfile(s).
-- `"most_restrictive"` — when policies contradict, the deny side wins regardless of which scope declared it. A `denies` always trumps an overlapping `requires`.
-- A list of scope strings drawn from `["personal", "team", "org", "project"]` — the resolution order, first listed wins. Scopes not listed still have their policies accumulated; they only lose precedence when they contradict a listed scope. Example: `["project", "org", "personal"]` means project beats org beats personal on conflict.
-
-**Precedence between declarations:**
-
-- A `policy_conflict_resolution` declared inside a `context` block overrides the file-level declaration within that context.
-- If neither is declared in the active context's resolution chain, the default `"strict"` applies.
-- An imported org or team Latestfile's `policy_conflict_resolution` declaration is informational only in v0.1 — it does not force the importer's behavior. Whether orgs can mandate a resolution strategy is deferred to a future spec version.
-
-**Schema:** the field accepts either a string (`"strict"` or `"most_restrictive"`) or a list of scope strings. Mixing list entries with the special tokens is a validation error.
+3. In v0.1, no level overrides the vendor field values of entities defined at another level. A `tool` block's vendor config (e.g., `privacy_mode`) is authoritative wherever the block is defined. Whether to allow context-level overrides is an open question for future versions (see below).
 
 ---
 
@@ -100,7 +67,7 @@ context "work" {
 
 ### Scope and File Location
 
-A Latestfile is self-describing via a REQUIRED top-level `scope` field. The spec does not prescribe where personal, team, or org Latestfiles live in version control — that is the author's choice. Identity for sharing and importing comes from the registry (see Registry section), not from file location.
+A Latestfile is self-describing via a REQUIRED top-level `scope` field. The spec does not prescribe where personal, team, or org Latestfiles live in version control — that is the author's choice. Identity for sharing and importing comes from the registry (see Registry section), not from file location. Project Latestfiles are the one exception: they live in the codebase they describe and are discovered by convention (see Project-Level Discovery below).
 
 ```hcl
 latestfile_version = "0.1"
@@ -111,23 +78,33 @@ The `scope` field MUST be one of `"personal"`, `"team"`, `"org"`, or `"project"`
 
 | Scope | Content Constraints |
 |---|---|
-| `personal` | All entity types valid. MUST contain exactly one `profile` block. |
-| `team` | All entity types valid. MUST contain exactly one `profile` block. |
-| `org` | All entity types valid. MAY contain at most one `profile` block. |
-| `project` | Only `policy` blocks. MUST NOT contain `tool`, `model`, `workflow`, `instructions`, `context`, or `profile` blocks. |
+| `personal` | `tool`, `model`, `workflow`, `instructions`, `context` blocks valid. MUST contain exactly one `profile` block. |
+| `team` | `tool`, `model`, `workflow`, `instructions`, `context` blocks valid. MUST contain exactly one `profile` block. |
+| `org` | `tool`, `model`, `workflow`, `instructions`, `context` blocks valid. MAY contain at most one `profile` block. |
+| `project` | `tool`, `model`, `workflow`, `instructions` blocks valid. MUST NOT contain `context` or `profile` blocks. |
+
+A project Latestfile describes the project-side AI setup: which CLAUDE.md / .cursorrules / AGENTS.md the project provides, which tools or models are recommended for working in this codebase, and which workflows apply. It does not declare an actor, and it does not compose other Latestfiles — composition happens at the actor (personal/team/org) level.
 
 ### Project-Level Discovery
 
-Project Latestfiles are the one exception to "file location is the author's choice." Because project policies attach to a specific codebase rather than to a published identity, tooling that operates inside a codebase MUST discover the project Latestfile by checking for `.latestfile` at the repository root. The repository root is identified as the nearest enclosing directory containing a `.git` directory. Tooling MUST NOT walk past the repository root in search of a project-level Latestfile.
+Project Latestfiles are the one exception to "file location is the author's choice." Because a project Latestfile describes a specific codebase, tooling that operates inside a codebase MUST discover it by checking for `.latestfile` at the repository root. The repository root is identified as the nearest enclosing directory containing a `.git` directory. Tooling MUST NOT walk past the repository root in search of a project-level Latestfile.
 
 Example project Latestfile:
 
 ```hcl
 latestfile_version = "0.1"
+scope              = "project"
 
-policy "no-ai-on-migrations" {
-  description = "Declares intent that database migrations be written without AI assistance"
-  denies      = ["db/migrations/**"]
+instructions "claude-code" {
+  source = "./CLAUDE.md"
+}
+
+instructions "cursor" {
+  source = "./.cursorrules"
+}
+
+workflow "tdd" {
+  description = "This project follows test-driven development"
 }
 ```
 
@@ -164,7 +141,7 @@ Parsers MUST support both reference forms.
 A conformant parser MUST distinguish between two error classes:
 
 - **Parse error** — the file is not valid syntax (malformed block, unclosed brace, invalid assignment). Parsers MUST halt and report the location.
-- **Validation error** — the file is syntactically valid but violates a normative constraint (undefined reference, reserved field used as vendor field, project-level file containing a non-`policy` block). Parsers SHOULD collect and report all validation errors before halting.
+- **Validation error** — the file is syntactically valid but violates a normative constraint (undefined reference, reserved field used as vendor field, content disallowed at the declared `scope`). Parsers SHOULD collect and report all validation errors before halting.
 
 Unknown block types and unknown fields within known blocks are NOT parse or validation errors. Parsers MUST tolerate them. Validators SHOULD report them as warnings to surface typos.
 
@@ -247,25 +224,6 @@ instructions "global" {
 
 The `source` field MUST be a relative file path (relative to the Latestfile's location) or an `https://` URL. Parsers MUST NOT fetch remote URLs during parsing. The `source` field is informational; parsers MUST NOT read or validate the referenced file.
 
-### `policy`
-
-A rule declaring intent about AI tool behavior. Policies are advisory in v1 — they express intent but carry no enforcement mechanism. A future spec version may define enforcement semantics.
-
-```hcl
-policy "no-ai-on-secrets" {
-  description = "Declares intent to deny AI tools access to secret files"
-  denies      = ["**/.env*", "**/secrets/**", "**/*.pem"]
-  applies_to  = [tool["claude-code"], tool.cursor]
-}
-
-policy "require-review-workflow" {
-  description = "Declares intent that all PRs use the code-review workflow"
-  requires    = [workflow["code-review"]]
-}
-```
-
-The `denies` field, if present, MUST be a list of glob patterns using the [gitignore glob syntax](https://git-scm.com/docs/gitignore#_pattern_format). Patterns are relative to the repository root when interpreted in a project context, and informational otherwise.
-
 ### `context`
 
 A named composition of this identity with an external org or team Latestfile. The `import` field is OPTIONAL; a context without `import` describes a standalone composition using only locally defined entities.
@@ -289,13 +247,13 @@ context "work" {
 
 **Import trust.** The import mechanism follows the trust model of the registry transport. Tooling MUST use HTTPS for registry resolution and MUST validate TLS certificates. Signing and verification of imported Latestfiles are out of scope for v1.
 
-**The `org.` prefix** is available only within a `context` block that declares an `import`. It accesses entities defined in the imported Latestfile. The supported forms are: `org.tool.<name>`, `org.model.<name>`, `org.workflow.<name>`, `org.policy.<name>`, `org.instructions.<name>`. Referencing `org.*` without a declared `import` is a validation error.
+**The `org.` prefix** is available only within a `context` block that declares an `import`. It accesses entities defined in the imported Latestfile. The supported forms are: `org.tool.<name>`, `org.model.<name>`, `org.workflow.<name>`, `org.instructions.<name>`. Referencing `org.*` without a declared `import` is a validation error.
 
 Context blocks describe which entities are active in that context. They do not override the configuration of referenced entities — a tool's vendor fields are defined in the `tool` block and are the same across all contexts.
 
 ### `profile`
 
-A declaration of the person or entity this file describes. Personal and team Latestfiles MUST contain exactly one `profile` block. Org Latestfiles MAY contain a `profile` block but MUST NOT contain more than one. Project Latestfiles MUST NOT contain a `profile` block (project files are policies-only; see File Format).
+A declaration of the person or entity this file describes. Personal and team Latestfiles MUST contain exactly one `profile` block. Org Latestfiles MAY contain a `profile` block but MUST NOT contain more than one. Project Latestfiles MUST NOT contain a `profile` block (a project is not an actor; see File Format).
 
 ```hcl
 profile "james" {
@@ -399,12 +357,6 @@ instructions "global" {
   applies_to = [tool["claude-code"]]
 }
 
-policy "no-ai-on-secrets" {
-  description = "Declares intent to deny AI tools access to secret files"
-  denies      = ["**/.env*", "**/secrets/**"]
-  applies_to  = [tool["claude-code"], tool.cursor]
-}
-
 context "home" {
   tools  = [tool["claude-code"]]
   models = [model["claude-sonnet"]]
@@ -428,7 +380,7 @@ profile "james" {
 
 The following field names are reserved across all block types and MUST NOT be used as vendor-defined fields:
 
-`from`, `version`, `provider`, `description`, `applies_to`, `uses`, `models`, `import`, `source`, `denies`, `requires`, `role`, `contexts`, `tools`, `policy_conflict_resolution`, `scope`
+`from`, `version`, `provider`, `description`, `applies_to`, `uses`, `models`, `import`, `source`, `role`, `contexts`, `tools`, `scope`
 
 ---
 
@@ -460,7 +412,7 @@ The following are explicitly deferred:
 - Builder UI for generating Latestfiles
 - CLI validation tooling
 - Analytics and outcomes correlation
-- Enforcement mechanisms for `policy` and `workflow` blocks
+- Policies, enforcement, and any prescription-style mechanisms (deferred to v0.2; v0.1 is purely descriptive)
 - Team and org aggregation tooling
 - Authentication or signing of Latestfiles
 - Formal ABNF grammar (deferred to v1.0 RFC)
@@ -471,4 +423,3 @@ The following are explicitly deferred:
 
 1. Should `context` blocks be allowed to *override* personal tool config (e.g., different privacy settings at work via vendor fields), or only add new entities?
 2. Should the spec define a standard way to express AI spend or token limits at the org level?
-3. Should imported org/team Latestfiles be able to *mandate* a `policy_conflict_resolution` strategy on importers (currently informational only)?
