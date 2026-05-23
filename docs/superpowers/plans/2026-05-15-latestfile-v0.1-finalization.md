@@ -12,6 +12,42 @@
 
 ---
 
+## Phase 1 Outcome (Post-Execution Notes)
+
+Phase 1 ran to completion but produced two structural changes that affect downstream tasks. **Subagents executing Phase 2 onward MUST read this section before starting.**
+
+### Major change: v0.1 is now strictly descriptive
+
+During Phase 1, the spec was reframed as a *descriptive-only* specification. The `policy` entity block was removed entirely along with the `policy_conflict_resolution` field, the `denies` / `requires` reserved field names, and all policy-related composition rules.
+
+The rationale: a "policy" implies enforcement, even when labeled advisory. Mixing description with prescription muddied both. Prescription (policies, governance, mandates, enforcement semantics) is contemplated as a separate companion specification, possibly a future RFC of its own, rather than as a successor version of this one.
+
+**What this means for Phases 2-5:**
+
+- The JSON Schema (Phase 3) MUST NOT include a `policy` block definition. The reserved field list it validates against MUST NOT include `denies`, `requires`, or `policy_conflict_resolution`. The current spec is authoritative for the field list.
+- Reference Latestfiles (Phase 4) MUST NOT include `policy` blocks. Task 11 wording referring to "one policy" is outdated — the personal example should drop policy and add at least one `instructions` block instead.
+- The project Latestfile (Task 14) is no longer "policies only." It now describes the project-side AI setup: `tool`, `model`, `workflow`, and `instructions` blocks are valid; `context` and `profile` are not. See the spec's Scope and File Location section for content constraints.
+- Task 9 wording referring to "policy" in the list of block definitions to add is obsolete — drop it from that task's scope.
+- Task 10 reference to "policy conflicts" in the schema-limitations README is obsolete — there are no policy conflicts.
+
+### Minor change: registry-based imports + scope field
+
+`context.import` now uses registry URIs (`registry:<host>/<namespace>[/<name>][@<version>]`), not GitHub paths. Every Latestfile has a REQUIRED top-level `scope` field whose value is one of `"personal"`, `"team"`, `"org"`, `"project"`. The reference examples and schema must reflect this.
+
+### Tasks affected and their current status
+
+| Task | Status | Notes |
+|---|---|---|
+| 1 (profile cardinality) | Done | No changes |
+| 2 (custom tool handling) | Done | No changes |
+| 3 (version format) | Done | No changes |
+| 4 (policy conflict resolution) | Done, then **reverted** | The field exists only in git history; the spec no longer contains it. Treat this task as historical record only. |
+| 4.5 (canonical import format) | Done | Resolved by the registry restructure |
+| 4.6 (applies_to semantics) | **Moot** | Policy was removed, so accumulation semantics no longer apply. `applies_to` survives only on `instructions` blocks and is purely descriptive (no accumulation). |
+| 5 (deferrals) | Done | Two questions deferred: vendor field overrides in contexts, and org-level spend/token limits |
+
+---
+
 ## Phase 1: Resolve Open Questions
 
 The spec has 7 open questions. Each task here picks one, decides a v0.1 stance with the user, and either resolves the question in the spec or documents the explicit deferral.
@@ -197,7 +233,7 @@ git commit -m "Add JSON Schema skeleton for Latestfile v0.1"
 
 - [ ] **Step 4:** Commit.
 
-### Task 9: Add `model`, `workflow`, `instructions`, `policy`, `context`, `profile` definitions
+### Task 9: Add `model`, `workflow`, `instructions`, `context`, `profile` definitions
 
 **Files:**
 - Modify: `schemas/latestfile-v0.1.schema.json`
@@ -222,8 +258,8 @@ git commit -m "Add all block definitions to Latestfile JSON Schema"
 
 - [ ] **Step 1:** Write a short README explaining what the schema does and doesn't validate:
 
-  - Validates: file shape, required fields, format of `from`/`version`/identifier patterns
-  - Does not validate: cross-block reference resolution, registry resolution, vendor field schemas, policy conflicts
+  - Validates: file shape, required fields, format of `from`/`version`/identifier patterns, scope-specific content constraints
+  - Does not validate: cross-block reference resolution, registry resolution, vendor field schemas
 
 - [ ] **Step 2:** Note that a conformant validator (a separate, out-of-v0.1-scope tool) is required for full semantic validation.
 
@@ -252,7 +288,7 @@ These serve as documentation and as fixtures for validating the schema is correc
 
 - [ ] **Step 1:** Discuss with user: should this be James's actual setup or a generic example? Recommendation: generic example labeled "Example: Solo Engineer" so it's shareable as a template.
 
-- [ ] **Step 2:** Write the HCL version — must include `latestfile_version`, at least one tool, one model, one workflow, one `instructions`, one policy, two contexts (one with `import`, one without), and a `profile`.
+- [ ] **Step 2:** Write the HCL version — must include `latestfile_version`, `scope = "personal"`, at least one tool, one model, one workflow, one `instructions`, two contexts (one with `import` using a registry URI, one without), and a `profile`.
 
 - [ ] **Step 3:** Write the JSON equivalent.
 
@@ -269,9 +305,7 @@ git commit -m "Add personal reference Latestfile (HCL + JSON)"
 - Create: `examples/team/latestfile`
 - Create: `examples/team/latestfile.json`
 
-**Depends on:** Task 1 (profile cardinality decision determines whether team files include a `profile` block).
-
-- [ ] **Step 1:** Write a team Latestfile (fictitious "platform-team" at "acme") — should include team-required workflows, approved tools, and team-level policies. The presence or absence of a `profile` block is determined by Task 1's resolution: include it if Task 1 made `profile` required for team files, omit it if Task 1 made it optional/personal-only.
+- [ ] **Step 1:** Write a team Latestfile (fictitious "platform-team" at "acme") — should declare `scope = "team"`, include team-approved tools and models, at least one team workflow, and exactly one `profile` block (per spec: personal/team files MUST contain exactly one).
 
 - [ ] **Step 2:** Write the JSON equivalent.
 
@@ -283,7 +317,7 @@ git commit -m "Add personal reference Latestfile (HCL + JSON)"
 - Create: `examples/org/latestfile`
 - Create: `examples/org/latestfile.json`
 
-- [ ] **Step 1:** Write an org Latestfile (fictitious "acme") — should include enterprise-account references via vendor fields (e.g., `azure_tenant`), org-wide policies, org-approved tools.
+- [ ] **Step 1:** Write an org Latestfile (fictitious "acme") — should declare `scope = "org"`, include enterprise-account references via vendor fields (e.g., `azure_tenant`), org-approved tools and models, and at least one org workflow. MAY include a single `profile` block. MUST NOT contain `policy` blocks (removed from v0.1).
 
 - [ ] **Step 2:** Write the JSON equivalent.
 
@@ -295,7 +329,7 @@ git commit -m "Add personal reference Latestfile (HCL + JSON)"
 - Create: `examples/project/.latestfile`
 - Create: `examples/project/.latestfile.json`
 
-- [ ] **Step 1:** Write a project-level Latestfile — policies only, demonstrating the `denies` glob pattern. Should have a comment explaining the constraint that only `policy` blocks are allowed.
+- [ ] **Step 1:** Write a project-level Latestfile — declare `scope = "project"`. Demonstrate `instructions` blocks pointing at real-world project AI artifacts (`./CLAUDE.md`, `./.cursorrules`, `./AGENTS.md`), plus at least one project-recommended `tool`, one `model`, and one `workflow`. MUST NOT contain `context` or `profile` blocks (per spec). Add a comment explaining the file is discovered at `.git`-rooted repo root by tooling working inside a codebase.
 
 - [ ] **Step 2:** Write the JSON equivalent.
 
