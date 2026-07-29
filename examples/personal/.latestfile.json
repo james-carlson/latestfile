@@ -1,0 +1,59 @@
+{
+  "latestfile_version": "0.1",
+  "scope": "personal",
+  "tool": {
+    "claude-code": {
+      "from": "registry:anthropic/claude-code",
+      "version": ">=1.0",
+      "provider": "anthropic"
+    },
+    "cursor": {
+      "from": "registry:anysphere/cursor",
+      "version": ">=0.45",
+      "provider": "anysphere",
+      "autocomplete": true,
+      "privacy_mode": true
+    }
+  },
+  "model": {
+    "claude-sonnet": {
+      "from": "registry:anthropic/claude-sonnet-4-6",
+      "provider": "anthropic"
+    }
+  },
+  "workflow": {
+    "feature-development": {
+      "description": "End-to-end AI-assisted feature work, from spec to PR",
+      "uses": ["${tool[\"claude-code\"]}", "${tool.cursor}"],
+      "models": ["${model[\"claude-sonnet\"]}"]
+    },
+    "code-review": {
+      "description": "AI-assisted PR review and pre-landing checks",
+      "uses": ["${tool[\"claude-code\"]}"],
+      "models": ["${model[\"claude-sonnet\"]}"]
+    }
+  },
+  "instructions": {
+    "global": {
+      "source": "./CLAUDE.md",
+      "applies_to": ["${tool[\"claude-code\"]}"]
+    }
+  },
+  "context": {
+    "home": {
+      "tools": ["${tool[\"claude-code\"]}", "${tool.cursor}"],
+      "models": ["${model[\"claude-sonnet\"]}"]
+    },
+    "work": {
+      "import": "registry:acme@v1.2",
+      "tools": ["${tool[\"claude-code\"]}", "${tool.cursor}"],
+      "models": ["${model[\"claude-sonnet\"]}", "${org.model[\"gpt4-azure\"]}"]
+    }
+  },
+  "profile": {
+    "me": {
+      "role": "engineer",
+      "contexts": ["${context.home}", "${context.work}"]
+    }
+  }
+}

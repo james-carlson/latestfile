@@ -1,0 +1,101 @@
+# Example: Solo Engineer
+#
+# A reference personal-scope Latestfile demonstrating the full set of v0.1
+# entity types. Copy and adapt this file to declare your own AI development
+# setup. Personal Latestfiles describe an actor (you) and travel with you
+# across projects; they are not committed into a codebase you work on.
+
+latestfile_version = "0.1"
+scope              = "personal"
+
+# --- Tools ---
+# A `tool` block declares an AI tool in use. The `from` field is OPTIONAL
+# and points at the vendor's canonical entity definition in a registry.
+# All non-reserved fields (e.g., `autocomplete`, `privacy_mode`) are
+# vendor-defined and validated against the vendor's schema, if published.
+
+tool "claude-code" {
+  from     = "registry:anthropic/claude-code"
+  version  = ">=1.0"
+  provider = "anthropic"
+}
+
+tool "cursor" {
+  from         = "registry:anysphere/cursor"
+  version      = ">=0.45"
+  provider     = "anysphere"
+  autocomplete = true
+  privacy_mode = true
+}
+
+# --- Models ---
+# A `model` block declares an AI model. Like `tool`, `from` is OPTIONAL
+# and resolves to a vendor entity definition.
+
+model "claude-sonnet" {
+  from     = "registry:anthropic/claude-sonnet-4-6"
+  provider = "anthropic"
+}
+
+# --- Workflows ---
+# A `workflow` block describes how AI fits into a development process.
+# Workflows are informational in v0.1 — they carry no enforcement
+# semantics. `uses` and `models` are documentation-only references.
+
+workflow "feature-development" {
+  description = "End-to-end AI-assisted feature work, from spec to PR"
+  uses        = [tool["claude-code"], tool.cursor]
+  models      = [model["claude-sonnet"]]
+}
+
+workflow "code-review" {
+  description = "AI-assisted PR review and pre-landing checks"
+  uses        = [tool["claude-code"]]
+  models      = [model["claude-sonnet"]]
+}
+
+# --- Instructions ---
+# An `instructions` block points at AI instructions or system prompts
+# used in this setup. The `source` is a path relative to this file (or
+# an https:// URL). Parsers MUST NOT read the referenced file — it is
+# informational only.
+
+instructions "global" {
+  source     = "./CLAUDE.md"
+  applies_to = [tool["claude-code"]]
+}
+
+# --- Contexts ---
+# A `context` block is a named composition of this identity with an
+# external org/team Latestfile. The `home` context has no `import` and
+# uses only locally declared entities. The `work` context imports an
+# org Latestfile from the registry and references `org.*` entities
+# declared in that imported file.
+
+context "home" {
+  tools  = [tool["claude-code"], tool.cursor]
+  models = [model["claude-sonnet"]]
+}
+
+context "work" {
+  # The `import` is a registry URI. The `@v1.2` pin avoids surprise drift;
+  # tooling SHOULD warn if it is omitted.
+  import = "registry:acme@v1.2"
+
+  tools = [tool["claude-code"], tool.cursor]
+
+  # `org.model["gpt4-azure"]` references a hyphenated model name declared
+  # in the imported org Latestfile. Hyphenated identifiers MUST use the
+  # bracket reference form.
+  models = [model["claude-sonnet"], org.model["gpt4-azure"]]
+}
+
+# --- Profile ---
+# Personal Latestfiles MUST contain exactly one `profile` block. The
+# profile declares who this file describes and which contexts they
+# operate in.
+
+profile "me" {
+  role     = "engineer"
+  contexts = [context.home, context.work]
+}

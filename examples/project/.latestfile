@@ -1,0 +1,93 @@
+# Example: Project Latestfile
+#
+# A reference project-scope Latestfile demonstrating the v0.1 entity types
+# that are valid when a Latestfile describes a codebase rather than an
+# actor. A project Latestfile is *descriptive only*: it declares which
+# AI-instruction artifacts the project ships, which tools and models are
+# recommended for working in this codebase, and which workflows the
+# project endorses. It carries no enforcement semantics in v0.1 — see
+# the spec's Out of Scope for v1 list (policies, mandates, governance).
+#
+# Discovery convention.
+#   Project Latestfiles are the one scope discovered by file location.
+#   Tooling working inside a codebase MUST look for `.latestfile` at the
+#   repository root, where "repository root" is the nearest enclosing
+#   directory containing a `.git` directory. Tooling MUST NOT walk past
+#   the repo root. See the spec's Project-Level Discovery section.
+#
+# Differences from personal, team, and org Latestfiles:
+#   - `scope = "project"` (not `"personal"`, `"team"`, or `"org"`).
+#   - File name has a leading dot (`.latestfile`), like the personal
+#     reference example. Personal files use the dot by convention;
+#     project files use the dot because they live at a repo root
+#     alongside other dotfiles (`.gitignore`, `.editorconfig`, etc.).
+#   - NO `profile` block. A project is not an actor — it does not have
+#     an identity that other Latestfiles can import. Composition
+#     happens at the actor (personal/team/org) level.
+#   - NO `context` block. Contexts are an actor concept (home vs. work
+#     for a person; default vs. on-call for a team). A codebase has
+#     no context to switch between.
+#   - NO `policy` block. Policy blocks were cut from v0.1 entirely —
+#     prescription (mandates, enforcement, governance) is deferred to
+#     a possible companion specification. v0.1 is descriptive only.
+#
+# The example below is for a fictional codebase that ships AI
+# instructions for three different agents (Claude Code, Cursor, Codex)
+# and recommends a TDD workflow.
+
+latestfile_version = "0.1"
+scope              = "project"
+
+# --- Instructions ---
+# The instructions blocks point at the AI-instruction artifacts this
+# project ships in-tree. `source` is a path relative to this file
+# (i.e., relative to the repo root). Parsers MUST NOT read the
+# referenced file — it is informational only. The `applies_to` field
+# is documentation-only: it tells human readers which tool each
+# instructions file is written for.
+
+instructions "claude-code" {
+  source     = "./CLAUDE.md"
+  applies_to = [tool["claude-code"]]
+}
+
+instructions "cursor" {
+  source = "./.cursorrules"
+}
+
+instructions "codex" {
+  source = "./AGENTS.md"
+}
+
+# --- Tools ---
+# Tools the project recommends for working in this codebase. These are
+# suggestions, not requirements — v0.1 is descriptive. A contributor
+# using a different AI tool is not in violation of anything; the project
+# is simply signalling which tools its instructions are tuned for.
+
+tool "claude-code" {
+  from     = "registry:anthropic/claude-code"
+  version  = ">=1.0"
+  provider = "anthropic"
+}
+
+# --- Models ---
+# Models the project recommends for working in this codebase. Same
+# descriptive stance as `tool`: these are suggestions tied to the
+# project's instructions and workflows, not a prescriptive allow-list.
+
+model "claude-sonnet" {
+  from     = "registry:anthropic/claude-sonnet-4-6"
+  provider = "anthropic"
+}
+
+# --- Workflows ---
+# Project-specific workflows describing how AI fits into work on this
+# codebase. Workflows are informational in v0.1 — `uses` and `models`
+# are documentation-only references.
+
+workflow "test-driven-development" {
+  description = "This project follows TDD: write a failing test, then have the AI agent implement the change to make it pass, then refactor."
+  uses        = [tool["claude-code"]]
+  models      = [model["claude-sonnet"]]
+}

@@ -1,0 +1,165 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://latest.dev/schemas/latestfile-v0.1.schema.json",
+  "title": "Latestfile v0.1",
+  "description": "Schema for the canonical JSON form of a Latestfile: a portable declaration of how a developer, team, or organization uses AI in their development workflow.",
+  "type": "object",
+  "required": ["latestfile_version", "scope"],
+  "properties": {
+    "latestfile_version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+$"
+    },
+    "scope": {
+      "type": "string",
+      "enum": ["personal", "team", "org", "project"]
+    },
+    "tool": { "$ref": "#/$defs/toolMap" },
+    "model": { "$ref": "#/$defs/modelMap" },
+    "workflow": { "$ref": "#/$defs/workflowMap" },
+    "instructions": { "$ref": "#/$defs/instructionsMap" },
+    "context": { "$ref": "#/$defs/contextMap" },
+    "profile": { "$ref": "#/$defs/profileMap" }
+  },
+  "additionalProperties": true,
+  "$defs": {
+    "toolMap": {
+      "type": "object",
+      "description": "Map from tool name (block label) to tool block. Tool names MUST match the identifier pattern [a-zA-Z][a-zA-Z0-9_-]*.",
+      "propertyNames": {
+        "pattern": "^[a-zA-Z][a-zA-Z0-9_-]*$"
+      },
+      "additionalProperties": { "$ref": "#/$defs/toolBlock" }
+    },
+    "toolBlock": {
+      "type": "object",
+      "description": "A tool block. The reserved fields 'from', 'version', and 'provider' are typed; all other fields are vendor-defined and unconstrained.",
+      "properties": {
+        "from": { "$ref": "#/$defs/registryUri" },
+        "version": { "$ref": "#/$defs/semverConstraint" },
+        "provider": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "modelMap": {
+      "type": "object",
+      "description": "Map from model name (block label) to model block. Model names MUST match the identifier pattern [a-zA-Z][a-zA-Z0-9_-]*.",
+      "propertyNames": {
+        "pattern": "^[a-zA-Z][a-zA-Z0-9_-]*$"
+      },
+      "additionalProperties": { "$ref": "#/$defs/modelBlock" }
+    },
+    "modelBlock": {
+      "type": "object",
+      "description": "A model block. The reserved fields 'from', 'version', and 'provider' are typed; all other fields are vendor-defined and unconstrained.",
+      "properties": {
+        "from": { "$ref": "#/$defs/registryUri" },
+        "version": { "$ref": "#/$defs/semverConstraint" },
+        "provider": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "workflowMap": {
+      "type": "object",
+      "description": "Map from workflow name (block label) to workflow block. Workflow names MUST match the identifier pattern [a-zA-Z][a-zA-Z0-9_-]*.",
+      "propertyNames": {
+        "pattern": "^[a-zA-Z][a-zA-Z0-9_-]*$"
+      },
+      "additionalProperties": { "$ref": "#/$defs/workflowBlock" }
+    },
+    "workflowBlock": {
+      "type": "object",
+      "description": "A workflow block. Informational in v0.1; reserved fields are 'description', 'uses', and 'models'.",
+      "properties": {
+        "description": { "type": "string" },
+        "uses": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/reference" }
+        },
+        "models": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/reference" }
+        }
+      },
+      "additionalProperties": true
+    },
+    "instructionsMap": {
+      "type": "object",
+      "description": "Map from instructions name (block label) to instructions block. Names MUST match the identifier pattern [a-zA-Z][a-zA-Z0-9_-]*.",
+      "propertyNames": {
+        "pattern": "^[a-zA-Z][a-zA-Z0-9_-]*$"
+      },
+      "additionalProperties": { "$ref": "#/$defs/instructionsBlock" }
+    },
+    "instructionsBlock": {
+      "type": "object",
+      "description": "An instructions block. Reserved fields are 'source' (relative file path or https URL) and 'applies_to' (array of references).",
+      "properties": {
+        "source": { "type": "string" },
+        "applies_to": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/reference" }
+        }
+      },
+      "additionalProperties": true
+    },
+    "contextMap": {
+      "type": "object",
+      "description": "Map from context name (block label) to context block. Names MUST match the identifier pattern [a-zA-Z][a-zA-Z0-9_-]*.",
+      "propertyNames": {
+        "pattern": "^[a-zA-Z][a-zA-Z0-9_-]*$"
+      },
+      "additionalProperties": { "$ref": "#/$defs/contextBlock" }
+    },
+    "contextBlock": {
+      "type": "object",
+      "description": "A context block. Reserved fields are 'import' (optional registry URI), 'tools', and 'models'.",
+      "properties": {
+        "import": { "$ref": "#/$defs/registryUri" },
+        "tools": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/reference" }
+        },
+        "models": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/reference" }
+        }
+      },
+      "additionalProperties": true
+    },
+    "profileMap": {
+      "type": "object",
+      "description": "Map from profile name (block label) to profile block. Names MUST match the identifier pattern [a-zA-Z][a-zA-Z0-9_-]*.",
+      "propertyNames": {
+        "pattern": "^[a-zA-Z][a-zA-Z0-9_-]*$"
+      },
+      "additionalProperties": { "$ref": "#/$defs/profileBlock" }
+    },
+    "profileBlock": {
+      "type": "object",
+      "description": "A profile block. Reserved fields are 'role' (free-form string) and 'contexts' (array of references).",
+      "properties": {
+        "role": { "type": "string" },
+        "contexts": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/reference" }
+        }
+      },
+      "additionalProperties": true
+    },
+    "reference": {
+      "type": "string",
+      "description": "A reference to another block expressed as a string. In the canonical JSON form, HCL reference expressions (e.g., tool.cursor, tool[\"claude-code\"], org.model[\"gpt4-azure\"]) appear as ${...} template strings per the HCL2 JSON specification. Semantic resolution of references is out of scope for this schema."
+    },
+    "registryUri": {
+      "type": "string",
+      "description": "A registry URI: registry:[<host>/]<namespace>[/<name>][@<version>]. Hostnames are optional and default to latest.dev. Namespace and name match [a-z0-9][a-z0-9-]*. Version, when present, is a semver-compatible version string.",
+      "pattern": "^registry:(?:[a-z0-9][a-z0-9.-]*[a-z0-9]\\/)?[a-z0-9][a-z0-9-]*(?:\\/[a-z0-9][a-z0-9-]*)?(?:@[A-Za-z0-9._-]+)?$"
+    },
+    "semverConstraint": {
+      "type": "string",
+      "description": "A semver constraint string. Accepts common forms like '1.0', '1.0.0', '>=1.0', '~> 0.45', '^1.2.3', 'v1.2.3-beta'.",
+      "pattern": "^([<>=~^]|=>|<=|>=|~>|\\^)?\\s*v?[0-9]+(\\.[0-9]+)?(\\.[0-9]+)?([-+][A-Za-z0-9.-]+)?$"
+    }
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "latestfile_version": "0.1",
+  "scope": "team",
+  "tool": {
+    "claude-code": {
+      "from": "registry:anthropic/claude-code",
+      "version": ">=1.0",
+      "provider": "anthropic"
+    },
+    "cursor": {
+      "from": "registry:anysphere/cursor",
+      "version": ">=0.45",
+      "provider": "anysphere",
+      "autocomplete": true,
+      "privacy_mode": true
+    }
+  },
+  "model": {
+    "claude-sonnet": {
+      "from": "registry:anthropic/claude-sonnet-4-6",
+      "provider": "anthropic"
+    },
+    "claude-opus": {
+      "from": "registry:anthropic/claude-opus-4-7",
+      "provider": "anthropic"
+    }
+  },
+  "workflow": {
+    "review-with-claude": {
+      "description": "Team PR review process: Claude Code drafts a review pass before a human reviewer signs off",
+      "uses": ["${tool[\"claude-code\"]}"],
+      "models": ["${model[\"claude-opus\"]}"]
+    },
+    "deploy-checklist": {
+      "description": "Pre-deploy verification: AI-assisted runbook walkthrough and smoke-test generation",
+      "uses": ["${tool[\"claude-code\"]}"],
+      "models": ["${model[\"claude-sonnet\"]}"]
+    }
+  },
+  "instructions": {
+    "team-conventions": {
+      "source": "./team-conventions.md",
+      "applies_to": ["${tool[\"claude-code\"]}", "${tool.cursor}"]
+    }
+  },
+  "context": {
+    "default": {
+      "tools": ["${tool[\"claude-code\"]}", "${tool.cursor}"],
+      "models": ["${model[\"claude-sonnet\"]}", "${model[\"claude-opus\"]}"]
+    }
+  },
+  "profile": {
+    "platform-team": {
+      "role": "team",
+      "contexts": ["${context.default}"]
+    }
+  }
+}

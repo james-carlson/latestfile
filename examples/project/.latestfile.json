@@ -1,0 +1,36 @@
+{
+  "latestfile_version": "0.1",
+  "scope": "project",
+  "instructions": {
+    "claude-code": {
+      "source": "./CLAUDE.md",
+      "applies_to": ["${tool[\"claude-code\"]}"]
+    },
+    "cursor": {
+      "source": "./.cursorrules"
+    },
+    "codex": {
+      "source": "./AGENTS.md"
+    }
+  },
+  "tool": {
+    "claude-code": {
+      "from": "registry:anthropic/claude-code",
+      "version": ">=1.0",
+      "provider": "anthropic"
+    }
+  },
+  "model": {
+    "claude-sonnet": {
+      "from": "registry:anthropic/claude-sonnet-4-6",
+      "provider": "anthropic"
+    }
+  },
+  "workflow": {
+    "test-driven-development": {
+      "description": "This project follows TDD: write a failing test, then have the AI agent implement the change to make it pass, then refactor.",
+      "uses": ["${tool[\"claude-code\"]}"],
+      "models": ["${model[\"claude-sonnet\"]}"]
+    }
+  }
+}
