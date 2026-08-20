@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { REPO } from "@/lib/links";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://latest.dev"),
@@ -34,7 +35,7 @@ export default function RootLayout({
               <a href="/registry">Registry</a>
               <a href="/validate">Validate</a>
               <a href="/spec">Spec</a>
-              <a href="https://github.com/james-carlson/latestfile">GitHub</a>
+              <a href={REPO}>GitHub</a>
             </nav>
           </header>
           {children}

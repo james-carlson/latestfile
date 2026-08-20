@@ -1,0 +1,48 @@
+name: Registry entry
+description: Add or correct a tool or model definition in the registry
+labels: ["registry"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Registry entries are what `from = "registry:anthropic/claude-code"`
+        resolves to. The current ones are seeded by the spec author and carry
+        no vendor authority — corrections from vendors take precedence.
+
+        You do not need a registry entry to use the format. A `tool` block
+        without a `from` field is valid.
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Kind
+      options: ["tool", "model"]
+    validations:
+      required: true
+  - type: input
+    id: uri
+    attributes:
+      label: Proposed registry URI
+      description: "Form: registry:<namespace>/<name>"
+      placeholder: "registry:anysphere/cursor"
+    validations:
+      required: true
+  - type: input
+    id: name
+    attributes:
+      label: Display name
+      placeholder: Cursor
+    validations:
+      required: true
+  - type: textarea
+    id: fields
+    attributes:
+      label: Vendor fields
+      description: >
+        Optional. Non-reserved fields this tool or model supports, and what
+        they mean (e.g. `privacy_mode`, `autocomplete`).
+  - type: checkboxes
+    id: vendor
+    attributes:
+      label: Affiliation
+      options:
+        - label: I work for this vendor

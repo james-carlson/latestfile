@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { CodeBlock } from "../code-block";
 import { ProfileView } from "../profile-view";
 import { validate } from "@/lib/latestfile/validate";
+import { REPO } from "@/lib/links";
 import { bumpViews, getProfile, getViews } from "@/lib/store";
 
 // A claimed namespace is served at /@<name>. The App Router treats "@foo" as a
@@ -108,7 +109,7 @@ export default async function ProfilePage({
         <span>Latestfile v0.1 · a draft, and I want it torn apart</span>
         <span>
           <a href="/">Home</a> · <a href="/spec">Spec</a> ·{" "}
-          <a href="https://github.com/james-carlson/latestfile">GitHub</a>
+          <a href={REPO}>GitHub</a>
         </span>
       </footer>
     </main>

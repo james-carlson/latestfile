@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { entriesByNamespace } from "@/lib/latestfile/registry";
+import { REGISTRY_ISSUE } from "@/lib/links";
 import { getProfile, recentProfiles } from "@/lib/store";
 
 export const dynamic = "force-dynamic";
@@ -97,7 +98,7 @@ export default async function RegistryPage() {
           tell me what&apos;s missing and I&apos;ll add it.
         </p>
         <p className="btnrow">
-          <a className="btn" href="/feedback?about=registry">Suggest an entry</a>
+          <a className="btn" href={REGISTRY_ISSUE}>Suggest an entry</a>
           <a className="btn ghost" href="/new">Build a Latestfile</a>
         </p>
       </section>

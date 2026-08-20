@@ -1,0 +1,31 @@
+name: Bug
+description: Something on latest.dev or in the tooling is broken
+labels: ["bug"]
+body:
+  - type: dropdown
+    id: area
+    attributes:
+      label: Where?
+      options:
+        - "Builder (/new)"
+        - "Validator (/validate)"
+        - "Registry (/registry)"
+        - "A profile page (/@name)"
+        - "The site generally"
+        - "Something else"
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: file
+    attributes:
+      label: The Latestfile involved
+      description: >
+        If a specific file triggered it, paste it here. This is rendered as
+        code, no backticks needed.
+      render: hcl

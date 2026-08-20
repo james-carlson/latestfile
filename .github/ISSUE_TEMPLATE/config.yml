@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Try it first
+    url: https://latest.dev/new
+    about: Build a Latestfile in a couple of minutes — most feedback gets sharper after you've written one.
+  - name: Read the spec
+    url: https://latest.dev/spec
+    about: The full v0.1 draft, including what is deliberately out of scope.

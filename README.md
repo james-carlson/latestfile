@@ -40,29 +40,61 @@ v0.1 is deliberately **descriptive, not prescriptive** — it captures what's in
 rules or enforcement. Prescription (policy, governance) is contemplated as a separate
 future spec.
 
+## Try it
+
+You don't need to write one by hand.
+
+- **[Build one](https://latest.dev/new)** — pick your tools and models, get a valid file.
+- **[Validate one](https://latest.dev/validate)** — paste or upload, get every problem with a line number. Runs in your browser.
+- **[Claim a namespace](https://latest.dev/new)** — turn your file into a shareable profile at `latest.dev/@you`.
+
 ## Repo contents
 
 | Path | What |
 |---|---|
-| [`SPEC.md`](./SPEC.md) | The v0.1 specification |
+| [`SPEC.md`](./SPEC.md) | The v0.1 specification, including its Implementation Status |
 | [`schemas/`](./schemas) | JSON Schema (2020-12) for the canonical JSON form |
 | [`examples/`](./examples) | Reference Latestfiles (HCL + JSON) for each scope |
-| `app/`, `content/` | The [latest.dev](https://latest.dev) landing site (Next.js) |
+| `app/`, `content/` | The [latest.dev](https://latest.dev) site |
+| `lib/` | Parser, validator, and registry resolution |
+
+The specification is the point. Everything under `app/` and `lib/` is a reference
+implementation of it — where the two disagree, the spec is correct and the code is
+the bug.
+
+Canonical URLs, resolvable:
+
+- Schema: <https://latest.dev/schemas/latestfile-v0.1.schema.json>
+- Examples: <https://latest.dev/examples/personal/.latestfile>
+- Any published file: `curl https://latest.dev/@<namespace>/latestfile`
 
 ## Status
 
-**v0.1 draft.** It's early and it's meant to be argued with. Open an issue with what you'd
-change — especially where the composition model breaks down.
+**v0.1 draft.** It's early and it's meant to be argued with.
 
-## The site
+Nobody is using this in production yet, including me at scale. The composition model —
+personal files importing an org's file — has never been tested against a real
+organisation, and that's where I most expect it to break.
+[Open an issue](https://github.com/james-carlson/latestfile/issues/new/choose) with
+what you'd change. See [CONTRIBUTING.md](./CONTRIBUTING.md) for how spec changes,
+registry entries, and code fixes each work.
 
-The landing page is a Next.js app.
+## Running the site
 
 ```bash
 pnpm install
 pnpm dev      # http://localhost:3000
 ```
 
+Namespace claims and feedback need a Redis-compatible store. Without one, a local
+filesystem driver is used automatically, so `pnpm dev` works with no configuration.
+
+| Variable | Purpose |
+|---|---|
+| `KV_REST_API_URL`, `KV_REST_API_TOKEN` | Upstash Redis (also accepts `UPSTASH_REDIS_REST_*`) |
+| `FEEDBACK_KEY` | Gates `/feedback/inbox`. Unset in production means the inbox is unreachable. |
+
 ## License
 
-Spec: CC BY 4.0 (proposed). Code: MIT (proposed).
+Specification (`SPEC.md`, `schemas/`, `examples/`): [CC BY 4.0](./LICENSE-SPEC).
+Code: [MIT](./LICENSE).

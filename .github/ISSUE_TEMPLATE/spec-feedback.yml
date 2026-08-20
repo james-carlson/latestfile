@@ -1,0 +1,43 @@
+name: Spec feedback
+description: Tell me where the specification is wrong, unclear, or can't express your setup
+labels: ["spec"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This is the most useful kind of issue. The spec is a v0.1 draft and
+        the composition model in particular has never been tested against a
+        real organisation.
+  - type: input
+    id: section
+    attributes:
+      label: Which section?
+      description: e.g. "Composition Model", "Entity Types → context", "Registry"
+      placeholder: Composition Model
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What does the current text require, and what breaks?
+      description: >
+        Quote or paraphrase the current requirement, then describe the real
+        setup it fails to express. Concrete beats abstract.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What would you change?
+      description: >
+        Optional. If you have specific wording, include it. RFC 2119 keywords
+        (MUST / SHOULD / MAY) welcome.
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Scope check
+      options:
+        - label: >
+            This is not a request for policy, enforcement, or governance
+            features, which are deliberately out of scope for v0.1.
+          required: true

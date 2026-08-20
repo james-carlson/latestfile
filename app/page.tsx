@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { Markdown } from "./markdown";
+import { REPO } from "@/lib/links";
 import { getProfile, recentProfiles } from "@/lib/store";
 
 export const dynamic = "force-dynamic";
@@ -59,7 +60,7 @@ export default async function Home() {
         <span>Latestfile v0.1 · a draft, and I want it torn apart</span>
         <span>
           <a href="/spec">Spec</a> ·{" "}
-          <a href="https://github.com/james-carlson/latestfile">GitHub</a>
+          <a href={REPO}>GitHub</a>
         </span>
       </footer>
     </main>
