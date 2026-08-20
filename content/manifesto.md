@@ -1,25 +1,53 @@
-# Your company has no idea how it uses AI
+# Proposing Precision: Giving AI Usage a Spec instead of a Sentence
 
-*A proposal for a portable AI-use declaration. Draft — feedback welcome.*
+## *An introduction to the `latestfile`, a new way to describe AI usage.*
 
-Ask ten engineers at your company how they use AI and you will get ten different answers, none of them written down anywhere you can find. One lives in Cursor with autocomplete on and privacy mode off. One drives Claude Code through a wall of custom CLAUDE.md rules. One pastes into a chat window and copies back. One quietly routes through a personal API key the security team has never heard of. Multiply that by every team, and you get the thing every leader is now asking about and nobody can answer: *how do we actually use AI here?*
+###### **CONTENT**
+1. [The problem](#1-the-problem)
+1. [The `latestfile`: describing AI usage with precision](#2-the-latestfile-describing-ai-usage-with-precision)
+1. [A sample `latestfile`](#3-a-sample-latestfile)
+1. [Try it out!](#4-try-it-out)
+1. [Contribute](#5-contribute)
 
-This is not an idle question. It is the reason the ROI conversation has gone sour. Boards are asking where the returns are. Leaders want to set policy. Both run into the same wall: you cannot measure, guide, or improve a practice you cannot even see. AI adoption inside most organizations is invisible. It leaves no artifact. It does not travel. It cannot be diffed, compared, or reasoned about. So the strategy conversation happens on vibes, and the policy conversation happens in a vacuum.
+### 1. The problem
 
-We already solved this exact shape of problem before, several times.
+Ask a few colleagues how they use AI, and you'll likely get a different answer from each one. That's interesting given how high the stakes seem right now. 
 
-## We know how to make invisible things legible
+I think the force driving focus on AI use is the associated financial cost. The tools being made available from companies competing in the space were initially free or greatly subsidized. There's a few of those products left, but that is changing. End users are getting passed more of the costs required to create the technology as it gains its footing. With more time spent reflecting on the data and dollars gone by, a lot of people think it's time to start asking some harder questions.
 
-When package dependencies were an untracked mess, we got `package.json`. When infrastructure was hand-clicked in consoles, we got Terraform. When we needed machines to know what a page was about, we got `robots.txt` and `sitemap.xml`. When we wanted models to read our docs, we got `llms.txt`. None of these are clever. They are all the same move: take a practice that lived in people's heads and give it a small, portable, human-readable file that travels, diffs, and composes.
+Today's environment is rapid -- sometimes exhausting -- technological change. Whether it's the big-name companies produce foundational models and/or frontier solutions and products, or others mixing and matching features and combinations of components and capabilities, the enormous capital investments of yesterday have  yielded a market absolutely flooded with updates, releases, and changes today. [^1] 
 
-AI use has no such file. The artifacts we do have each capture a slice and stop there. CLAUDE.md and `.cursorrules` describe a project, not a person. IDE settings live on one laptop. MDM policies describe what is allowed, not what is actually used. A survey is a snapshot that is stale the moment it is collected. None of them travel with the developer across projects, and none of them compose from an individual up to a team up to an org.
+There's likewise pressure to stay on top of it all. Yet, given the rapid pace of change, you can't expect that answers to questions today will hold and be the same in a few months (e.g., "What's the best tool for `x`?") In most cases people read and research when they can, adopt when they have the time, and haphazardly feel their way forward.
 
-## A Latestfile
+For example, for software engineers, there are a dizzying array of choices. One can live in Cursor with autocomplete on (and privacy mode off). Another can drive Claude Code through a wall of custom and private-to-them CLAUDE.md rules. Another may prefer to paste code or questions into a ChatGPT or Codex chat window, copying the output back out.
 
-So here is the proposal. A single declarative file that states how a developer, team, or organization uses AI. Not what they are allowed to do. What they actually do: which tools, which models, which workflows, which instructions. It describes the actor, so it travels with the person, not the codebase.
+You multiply this variance by every team, and you can start to see the question organization leaders need to be asking amid the chaos: "How do we use AI here, and what is the impact?" Shareholders and boards want to know where the returns promised are showing up. Leaders want to set policies. Ultimately, it's difficult to measure o(or improve) something you can't see.[^2] 
 
-Here is a minimal one:
+AI use and adoption at most companies is easily attached to a visible (and painful) indicator of its use -- financial cost. But costs tell you, in general, about the *quantity* of usage, and much less about important *qualities of* or *differentiations in* usage. We are going to need insights about impact and outcomes of AI usage, and the outputs required along the way to get there. But our means for understanding usage are frankly  pretty limited at present.
 
+We can try to describe our usage, but blind spots show up here like other self-reported endeavors. That means that despite AI being a popular topic of conversation, the influence mechanisms at play that will partially determine *how* you use AI aren't accurately or simply communicated. Not only will it be hard to understand our  usage today in light of how we've used it before, or how'll use it in the future, but we're also hamstrung in the difficult to convey to others in our organizations or online.
+
+Bottom line? In a lot of places, fear of missing out on the AI goldrush is the ultimate thing driving strategy. Big decisions and expenditures are primarily happening based on vibes. Policies are being set from the hip, in a vacuum absent the information that would be insightful.
+
+We can do better.
+
+### 2. The `latestfile`: describing AI usage with precision
+
+So, now it's your turn to answer the question: ***"How do __you__ use AI?"***  
+
+Have you even had enough time to articulate a good answer? What are the elements? How have you used it today? How has your usage changed over the last week? Month? Quarter? What was the impact when you picked up that new skill, downloaded that new plugin, switched over to the new product, or paid for the "pro" level of that new service? If you're thinking your answer is a bit mushy, you're probably not alone. Think of the implications: should I base important decisions off of what you tell me? Conversely, how accurate is the information you are taking in? Do you take what you see or hear with a grain of salt, or at face value, and what should you be doing?
+
+When we spend (hopefully *invest*) our time, effort, and money into the plethora of new tools being released or updated, *precision matters*. Without a precise understanding of someone's usage, the benefits, outcomes, payoffs, and ROI -- the things we're being promised and the things we are seeking -- are impossible to accurately attribute. 
+
+To this point, there has not been a well-defined way to do that. AI usage has no standard description, no standard schema that works across products. There are some emerging conventions for attempting to influence usage - some for certain products (e.g., `CLAUDE.md`, and `.cursorrules`) and some intended to work across products (e.g. `AGENTS.md`). Product usage from the perspective of companies offering solutions in the space is  no doubt filling up databases with adoption metrics, engagement, retention, etc. 
+
+But ultimately, until now, there has been nothing out there that describes AI usage in the way we actually need. 
+
+That's where the `latestfile` comes in. A `latestfile` is a declaration of how you are intending to use AI, with a description made, precisely, with a syntax format. The official spec allows description for how individual employees, teams, or organizations use AI. The starting point is allowing people describe what they *intend* to do. These are questions that are generally easy to surface: What tools are you set up for? What models do you  have access to? Which models do you use? Which features of which products are you leveraging? 
+
+Let's make this more concrete. Here's a minimal example:
+
+**Sample `latestfile`**
 ```hcl
 latestfile_version = "0.1"
 scope              = "personal"
@@ -36,29 +64,33 @@ model "claude-sonnet" {
 
 workflow "feature-development" {
   description = "Spec to PR, AI-assisted"
-  uses        = [tool.claude-code]
-  models      = [model.claude-sonnet]
+  uses        = [tool["claude-code"]]
+  models      = [model["claude-sonnet"]]
 }
 
 profile "me" {
   role = "engineer"
 }
 ```
+Latestfiles describe things -- precisely -- from the perspective of an actor (human or agent). The description attaches to an identity (person or agent), but also allows for different scopes or contexts of that identity's use. (e.g. "I use Claude at work and Codex at home.") 
 
-That is the whole idea in eight lines. It reads like config because it is config. It is version-controlled, diffable, and machine-parseable. And it composes: your personal file can import your org's file, so the org declares its approved tools and models once and every individual inherits them by reference. A team is the sum of its members' declarations. An org is the sum of its teams. Suddenly "how do we use AI here" is a query, not a guess.
+There is an extendable list of the different constructs that currently describe AI usage. Companies can also control what appears in an official `latestfile` registry, which can provide official listings of products, services, and features (and their descriptions).
 
-The spec is deliberately narrow in v0.1. It describes; it does not prescribe. No policies, no enforcement, no mandates. That harder, more contested layer belongs in a separate document once the descriptive layer is stable and adopted. Describe first. Guide policy second. You cannot do the second without the first, and right now almost nobody has the first.
+These files can also mention and relate to each other, and be composed. That means your personal file can import your org's file, so the org declares its approved tools and models once and everyone inherits them by reference. A team where everyone is using a `latestfile` has a good sense of it's members' declarations. An organization can do the same thing by developing an understanding of its teams. "How do we use AI here" turns into a query with an answer (instead of just a guess).
 
-## The call
+This initial (v0.1) of [the spec](/spec) is deliberately narrow. It just puts boundaries on the descriptions. It doesn't allow for accumulation of usage data (such as telemetry) and it doesn't allow people to articulate policies. It starts deliberately small: what people are *intending* to do. That will open the door to measure what people  *actually* do. Perhaps the standard can even eventually articulate policy and enforce what people are *allowed*  to do. All of the potential here should start in a syntax backed by standardized technical specifications about how to describe what we're doing, so we can manage the chaos and complexity we find ourselves in. It's probably  not going away soon. 
 
-The full v0.1 spec is written and public. It uses RFC 2119 language, defines four scopes (personal, team, org, project), and specifies the composition model. It is a draft, and drafts get better with people poking at them.
+Admittedly, for most of us, the `latestfile` format will seem a bit dry. Most people don't talk in this level of precision naturally. But, by giving some thought to the important structures in our AI world, and the relationships between them, adherence to a standard format for explanation allows both us and machines to better understand what we are and aren't benefitting from.
 
-Three things you can do:
+### 4. Try it out: Make and publish your own (and give me feedback!)
 
-1. **Read the spec.** Tell me where it is wrong. [link]
-2. **Write your own Latestfile.** It takes two minutes. Here is mine, published in the open: [link]. If yours looks nothing like mine, that is the point, and I want to see it.
-3. **Get a shareable profile.** I am building a generator that turns a Latestfile into a public profile page at `latest.dev/@you`, plus a registry so orgs can compose files by reference. Join the waitlist: [link]
+The `latestfile` idea is still a draft. I'm open to change and criticism, and I am inviting feedback with the  hope you'll share your thoughts to help me refine the idea.
 
-If the artifact that made dependencies, infrastructure, and web crawling legible each became a small standard everyone quietly relies on, the artifact that makes AI use legible can too. That file does not exist yet. I think it should. Here is a first draft. Tell me what you would change.
+1. **Try it out writing your own.** I get that the process of learning the syntax and writing things out is probably a non-starter for 99%+ of the population. Especially now that we are getting used to communicating with our computers in our natural language. So I built an interface that still delivers a `latestfile` but that just leaves you what you need. It only takes a few minutes to [use the builder that writes it for you](/new)! If you're able to capture your usage (or not) is super useful feedback at this point. I would love to hear your thoughts.
+1. **Claim a namespace / profile.** If you want, you can turn your file into a shareable public profile at `latest.dev/@you`. You can show colleagues and even potential employers how you use AI. The official spot you claim can become part of your `latestfile`, which has advantages for future automation.
+1. **Read the spec and tell me where it's wrong.** [It's here](/spec). If a technical spec like this is your kind of thing, please give the official spec a glance, a review, or even written feedback. I can use help to do the heavy lifting there. It's complete with RFC 2119 language, so buckle up. Or fire up your agent with a good prompt. Feel free to shoot me feedback [here](/feedback).  
 
-*— [your name], latest.dev*
+*— James Carlson, latest.dev*
+
+[^1]: Ironically, these products give the environment a reinforcing loop - using the tools enables you to more quickly deliver new products and services... some of which can be used to more quickly make more products and services.
+[^2]: Not that everything can or ought to be measured. Metrics can be taken too far. See an excellent recent article on this by Mike Fisher: [Seeing Like a State](https://mikefisher.substack.com/p/seeing-like-a-state).

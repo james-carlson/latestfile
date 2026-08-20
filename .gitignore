@@ -8,3 +8,11 @@
 .vercel
 next-env.d.ts
 *.tsbuildinfo
+
+# local dev store for claimed namespaces
+/.latestfile-store
+
+# drafting scratch (not published)
+/content/*.bak
+/content/manifesto.md.yours
+/content/cut.md

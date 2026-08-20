@@ -27,8 +27,8 @@ model "claude-sonnet" {
 
 workflow "feature-development" {
   description = "Spec to PR, AI-assisted"
-  uses        = [tool.claude-code]
-  models      = [model.claude-sonnet]
+  uses        = [tool["claude-code"]]
+  models      = [model["claude-sonnet"]]
 }
 
 profile "me" {
