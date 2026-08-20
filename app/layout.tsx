@@ -31,6 +31,7 @@ export default function RootLayout({
             </div>
             <nav className="nav">
               <a href="/new">Build</a>
+              <a href="/registry">Registry</a>
               <a href="/validate">Validate</a>
               <a href="/spec">Spec</a>
               <a href="https://github.com/james-carlson/latestfile">GitHub</a>

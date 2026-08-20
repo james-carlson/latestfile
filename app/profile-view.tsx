@@ -1,4 +1,5 @@
 import type { Block } from "@/lib/hcl/parse";
+import { registryHref } from "@/lib/latestfile/registry";
 import {
   blockAttr,
   blockRefs,
@@ -26,7 +27,9 @@ function Chip({ text }: { text: string }) {
 function EntityCard({ b }: { b: Block }) {
   const provider = blockAttr(b, "provider");
   const version = blockAttr(b, "version");
-  const from = shortFrom(blockAttr(b, "from"));
+  const rawFrom = blockAttr(b, "from");
+  const from = shortFrom(rawFrom);
+  const href = rawFrom ? registryHref(rawFrom) : null;
   const vendor = vendorFields(b);
 
   return (
@@ -37,7 +40,12 @@ function EntityCard({ b }: { b: Block }) {
       </div>
       {(from || version) && (
         <div className="card-meta">
-          {from && <code>{from}</code>}
+          {from &&
+            (href ? (
+              <a href={href}><code>{from}</code></a>
+            ) : (
+              <code>{from}</code>
+            ))}
           {version && <span className="card-version">{version}</span>}
         </div>
       )}
@@ -52,7 +60,13 @@ function EntityCard({ b }: { b: Block }) {
         </dl>
       )}
       {!from && (
-        <p className="card-note">No registry definition — vendor fields unvalidated.</p>
+        <p className="card-note">
+          Not in the registry.{" "}
+          <a href={`/feedback?about=${encodeURIComponent(`add:${b.name}`)}`}>
+            Suggest it
+          </a>
+          .
+        </p>
       )}
     </li>
   );

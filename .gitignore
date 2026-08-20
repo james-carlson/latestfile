@@ -16,3 +16,4 @@ next-env.d.ts
 /content/*.bak
 /content/manifesto.md.yours
 /content/cut.md
+.env*

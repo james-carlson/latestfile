@@ -458,6 +458,46 @@ The following are explicitly deferred:
 
 ---
 
+## Implementation Status
+
+This section is **informative, not normative.** It records which of the items
+above now have working implementations at `latest.dev`. Nothing here changes a
+requirement stated elsewhere in this document; where an implementation and this
+specification disagree, this specification is correct and the implementation is
+a defect.
+
+The v1 deliverable is the specification. Tooling was listed as out of scope so
+that the descriptive layer could stabilize without waiting on it, not because
+tooling is unwelcome. The following exists as of v0.1:
+
+| Deferred item | Status |
+|---|---|
+| Builder UI for generating Latestfiles | Implemented at `/new`. Produces HCL2 native syntax from a guided form. |
+| CLI validation tooling | Not implemented. A browser-based validator exists at `/validate`; it reports parse errors, validation errors, and warnings with source positions. |
+| Registry implementation | Partially implemented. Namespaces can be claimed, published Latestfiles resolve at `/@<namespace>`, and entity definitions referenced by `from` resolve under `/registry`. The publishing protocol, HTTP API, authentication, signing, and naming policy remain out of scope. |
+| Team and org aggregation tooling | Not implemented. `context.import` is parsed and validated, but imported files are not resolved. |
+| Analytics and outcomes correlation | Not implemented. |
+| Policies, enforcement, governance | Not implemented, and structurally out of scope. See the note above on the descriptive/prescriptive split. |
+| Formal ABNF grammar | Not implemented. Deferred to the v1.0 RFC. |
+| Authentication or signing of Latestfiles | Not implemented. |
+
+Two consequences of the partial registry are worth stating plainly:
+
+1. **Entity definitions are seeded, not vendor-published.** SPEC.md § Registry
+   Content says vendors maintain the canonical definitions a `from` field
+   references. No vendor has published one. The definitions currently resolvable
+   under `/registry` were written by the author of this specification so that
+   `registry:` URIs resolve to something. They carry no vendor authority.
+
+2. **Claiming a namespace is not governed.** The naming policy question this
+   document defers (who owns `acme` on `latest.dev`) is genuinely unanswered.
+   Namespaces are currently claimed first-come, with no verification that a
+   claimant is connected to the name they claim.
+
+Implementations are encouraged. A conformant implementation is one that follows
+the normative requirements in this document, not one that matches the behaviour
+described in this section.
+
 ## Deferred to Future Versions
 
 The following questions are intentionally left open in v0.1 and will be revisited in a future spec version:

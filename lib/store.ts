@@ -295,3 +295,56 @@ export async function recentProfiles(limit = 12): Promise<string[]> {
     return [];
   }
 }
+
+// ---------------------------------------------------------------- feedback
+
+export interface FeedbackRecord {
+  id: string;
+  message: string;
+  /** Optional — the form does not require it. */
+  name?: string;
+  email?: string;
+  /** Where the submission came from, e.g. "/@james" or "suggest:cursor". */
+  context?: string;
+  createdAt: string;
+}
+
+const FEEDBACK_LIST = "feedback:list";
+
+export async function addFeedback(input: {
+  message: string;
+  name?: string;
+  email?: string;
+  context?: string;
+}): Promise<FeedbackRecord> {
+  const record: FeedbackRecord = {
+    id: randomBytes(8).toString("hex"),
+    message: input.message,
+    name: input.name || undefined,
+    email: input.email || undefined,
+    context: input.context || undefined,
+    createdAt: new Date().toISOString(),
+  };
+  await driver().set(`feedback:${record.id}`, JSON.stringify(record));
+  const raw = await driver().get(FEEDBACK_LIST);
+  const ids: string[] = raw ? JSON.parse(raw) : [];
+  await driver().set(FEEDBACK_LIST, JSON.stringify([record.id, ...ids].slice(0, 1000)));
+  return record;
+}
+
+export async function listFeedback(limit = 200): Promise<FeedbackRecord[]> {
+  const raw = await driver().get(FEEDBACK_LIST);
+  const ids: string[] = raw ? JSON.parse(raw) : [];
+  const out: FeedbackRecord[] = [];
+  for (const id of ids.slice(0, limit)) {
+    const r = await driver().get(`feedback:${id}`);
+    if (r) {
+      try {
+        out.push(JSON.parse(r) as FeedbackRecord);
+      } catch {
+        /* skip unreadable record */
+      }
+    }
+  }
+  return out;
+}
