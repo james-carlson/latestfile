@@ -17,3 +17,14 @@ next-env.d.ts
 /content/manifesto.md.yours
 /content/cut.md
 .env*
+
+# generated at build time
+/lib/embedded-artifacts.ts
+
+# working notes
+/LAUNCH.md
+
+# vendor agent docs installed by marketplace integrations
+/.agents/
+/.claude/
+/skills-lock.json

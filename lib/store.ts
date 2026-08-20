@@ -90,11 +90,25 @@ interface Driver {
 
 // ---------------------------------------------------------------- redis driver
 
+/**
+ * Upstash credentials arrive under two different names depending on how the
+ * store was provisioned: UPSTASH_REDIS_REST_* when you configure it by hand,
+ * KV_REST_API_* when the Vercel Marketplace integration provisions it. Support
+ * both rather than depending on Redis.fromEnv(), which only knows the first.
+ */
+function upstashCredentials(): { url: string; token: string } | null {
+  const url = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
+  return url && token ? { url, token } : null;
+}
+
 function redisDriver(): Driver {
   // Imported lazily so local development never needs the env vars.
   const load = async () => {
     const { Redis } = await import("@upstash/redis");
-    return Redis.fromEnv();
+    const creds = upstashCredentials();
+    if (!creds) throw new Error("Upstash credentials are not configured");
+    return new Redis({ url: creds.url, token: creds.token });
   };
   return {
     name: "upstash-redis",
@@ -193,9 +207,7 @@ let cached: Driver | null = null;
 
 export function driver(): Driver {
   if (cached) return cached;
-  const hasUpstash =
-    !!process.env.UPSTASH_REDIS_REST_URL && !!process.env.UPSTASH_REDIS_REST_TOKEN;
-  cached = hasUpstash ? redisDriver() : fsDriver();
+  cached = upstashCredentials() ? redisDriver() : fsDriver();
   return cached;
 }
 
