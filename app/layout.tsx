@@ -32,8 +32,7 @@ export default function RootLayout({
               <a href="/" className="brandlink">
                 <Mark className="brandmark" />
                 latestfile
-              </a>{" "}
-              <span>· latest.dev</span>
+              </a>
             </div>
             <nav className="nav">
               <a href="/new">Build</a>
