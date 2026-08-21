@@ -3,7 +3,7 @@
   --fg: #e8e8ea;
   --muted: #9aa0a6;
   --line: #23252a;
-  --accent: #7c9cff;
+  --accent: #5aa2ff;
   --code-bg: #141619;
   --measure: 42rem;
 }
@@ -134,7 +134,7 @@ a:hover { text-decoration: underline; }
   padding: 1.75rem;
   border: 1px solid var(--line);
   border-radius: 14px;
-  background: linear-gradient(180deg, rgba(124,156,255,0.06), transparent);
+  background: linear-gradient(180deg, rgba(90,162,255,0.06), transparent);
 }
 .cta h3 { margin: 0 0 0.4rem; font-size: 1.15rem; letter-spacing: -0.02em; }
 .cta p { margin: 0 0 1rem; color: var(--muted); font-size: 0.95rem; }
@@ -285,7 +285,7 @@ input:focus, textarea:focus { outline: none; border-color: var(--accent); }
   padding: 0.18rem 0.45rem;
   color: var(--fg);
 }
-.chip-org { border-color: #3b4468; color: #a9b8ff; }
+.chip-org { border-color: #33455f; color: #9cc4ff; }
 .chip-tag {
   font-size: 0.62rem;
   text-transform: uppercase;
@@ -375,7 +375,7 @@ button.chip { cursor: pointer; font-family: ui-monospace, SFMono-Regular, Menlo,
   gap: 0.2rem;
 }
 .scopeopt:hover { border-color: #3a4157; }
-.scopeopt.on { border-color: var(--accent); background: rgba(124,156,255,0.08); }
+.scopeopt.on { border-color: var(--accent); background: rgba(90,162,255,0.08); }
 .scopeopt-label { font-weight: 600; font-size: 0.92rem; }
 .scopeopt-blurb { color: var(--muted); font-size: 0.78rem; line-height: 1.4; }
 
@@ -399,7 +399,7 @@ button.chip { cursor: pointer; font-family: ui-monospace, SFMono-Regular, Menlo,
   gap: 0.1rem;
 }
 .pick:hover { border-color: #3a4157; }
-.pick.on { border-color: var(--accent); background: rgba(124,156,255,0.08); }
+.pick.on { border-color: var(--accent); background: rgba(90,162,255,0.08); }
 .pick-label { font-size: 0.88rem; font-weight: 500; }
 .pick-note { font-size: 0.72rem; color: var(--muted); }
 
@@ -449,7 +449,7 @@ button.chip { cursor: pointer; font-family: ui-monospace, SFMono-Regular, Menlo,
   border: 1px solid var(--line);
   border-radius: 12px;
   padding: 1rem;
-  background: linear-gradient(180deg, rgba(124,156,255,0.05), transparent);
+  background: linear-gradient(180deg, rgba(90,162,255,0.05), transparent);
 }
 .claim h3 { margin: 0 0 0.35rem; font-size: 1rem; letter-spacing: -0.02em; }
 .claim.done h3 { color: #7ee2a8; }

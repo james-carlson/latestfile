@@ -6,8 +6,8 @@
 1. [The problem](#1-the-problem)
 1. [The `latestfile`: describing AI usage with precision](#2-the-latestfile-describing-ai-usage-with-precision)
 1. [A sample `latestfile`](#3-a-sample-latestfile)
-1. [Try it out!](#4-try-it-out)
-1. [Contribute](#5-contribute)
+1. [Try it out!](#4-try-it-out-make-and-publish-your-own-and-give-me-feedback)
+1. [Contribute](https://github.com/james-carlson/latestfile/blob/main/CONTRIBUTING.md)
 
 ### 1. The problem
 
@@ -47,7 +47,7 @@ That's where the `latestfile` comes in. A `latestfile` is a declaration of how y
 
 Let's make this more concrete. Here's a minimal example:
 
-**Sample `latestfile`**
+### 3. A sample `latestfile`
 ```hcl
 latestfile_version = "0.1"
 scope              = "personal"
