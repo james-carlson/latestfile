@@ -122,6 +122,34 @@ The value MUST be a string matching the pattern `^[0-9]+\.[0-9]+$` — two non-n
 
 Parsers MUST tolerate unknown fields and unknown block types — they MUST NOT halt or error on them. This ensures forward compatibility as the spec evolves. Validators SHOULD warn when they encounter unknown block types or unknown fields within known blocks, since these are most often typos (e.g., `wrkflow` instead of `workflow`) rather than forward-compat extensions.
 
+### Published Identity
+
+A Latestfile MAY declare where it is published with an OPTIONAL top-level
+`published_as` field:
+
+```hcl
+latestfile_version = "0.1"
+scope              = "personal"
+published_as       = "registry:james"
+```
+
+The value MUST be a registry URI as defined in the Registry section. It names
+the namespace under which this file is published, making the file
+self-identifying: tooling that encounters a Latestfile on disk can determine
+which registry entry it corresponds to without being told.
+
+`published_as` is informational. Parsers MUST NOT require it to resolve, and an
+unreachable or non-existent registry entry is not a validation error — the field
+records the author's intent, not a verified fact. In particular, a file
+declaring `published_as` does not prove the author controls that namespace;
+verification is a registry concern and is out of scope for v0.1, along with the
+naming policy that would give it meaning.
+
+Declaring `published_as` does not publish anything. Publishing is an action
+against a registry, and the publishing protocol is out of scope for v0.1.
+
+---
+
 ### Identifiers
 
 Block names (the quoted label after the block type) MUST match the pattern `[a-zA-Z][a-zA-Z0-9_-]*`. Names containing hyphens MUST use bracket syntax in reference expressions:
@@ -419,7 +447,7 @@ profile "james" {
 
 The following field names are reserved across all block types and MUST NOT be used as vendor-defined fields:
 
-`from`, `version`, `provider`, `description`, `applies_to`, `uses`, `models`, `import`, `source`, `role`, `contexts`, `tools`, `scope`
+`from`, `version`, `provider`, `description`, `applies_to`, `uses`, `models`, `import`, `source`, `role`, `contexts`, `tools`, `scope`, `published_as`
 
 ---
 

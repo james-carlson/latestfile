@@ -74,7 +74,7 @@ profile "me" {
 ```
 Latestfiles describe things -- precisely -- from the perspective of an actor (human or agent). The description attaches to an identity (person or agent), but also allows for different scopes or contexts of that identity's use. (e.g. "I use Claude at work and Codex at home.") 
 
-There is an extendable list of the different constructs that currently describe AI usage. Companies can also control what appears in an official `latestfile` registry, which can provide official listings of products, services, and features (and their descriptions).
+There is an extendable list of the different constructs that currently describe AI usage. The spec also gives companies a way to control what appears in an official `latestfile` registry, which can provide official listings of products, services, and features (and their descriptions). No vendor has claimed one yet, so today's entries are seeded.
 
 These files can also mention and relate to each other, and be composed. That means your personal file can import your org's file, so the org declares its approved tools and models once and everyone inherits them by reference. A team where everyone is using a `latestfile` has a good sense of it's members' declarations. An organization can do the same thing by developing an understanding of its teams. "How do we use AI here" turns into a query with an answer (instead of just a guess).
 
@@ -87,7 +87,7 @@ Admittedly, for most of us, the `latestfile` format will seem a bit dry. Most pe
 The `latestfile` idea is still a draft. I'm open to change and criticism, and I am inviting feedback with the  hope you'll share your thoughts to help me refine the idea.
 
 1. **Try it out writing your own.** I get that the process of learning the syntax and writing things out is probably a non-starter for 99%+ of the population. Especially now that we are getting used to communicating with our computers in our natural language. So I built an interface that still delivers a `latestfile` but that just leaves you what you need. It only takes a few minutes to [use the builder that writes it for you](/new)! If you're able to capture your usage (or not) is super useful feedback at this point. I would love to hear your thoughts.
-1. **Claim a namespace / profile.** If you want, you can turn your file into a shareable public profile at `latest.dev/@you`. You can show colleagues and even potential employers how you use AI. The official spot you claim can become part of your `latestfile`, which has advantages for future automation.
+1. **Claim a namespace / profile.** If you want, you can turn your file into a shareable public profile at `latest.dev/@you`. You can show colleagues and even potential employers how you use AI. The namespace you claim can be recorded in the file itself with `published_as = "registry:you"`, so a `latestfile` found on disk identifies where it's published. That's the hook future automation needs.
 1. **Read the spec and tell me where it's wrong.** [It's here](/spec). If a technical spec like this is your kind of thing, please give the official spec a glance, a review, or even written feedback. I can use help to do the heavy lifting there. It's complete with RFC 2119 language, so buckle up. Or fire up your agent with a good prompt. Feel free to shoot me feedback [here](/feedback).  
 
 *— James Carlson, latest.dev*

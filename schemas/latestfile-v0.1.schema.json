@@ -14,6 +14,7 @@
       "type": "string",
       "enum": ["personal", "team", "org", "project"]
     },
+    "published_as": { "$ref": "#/$defs/registryUri" },
     "tool": { "$ref": "#/$defs/toolMap" },
     "model": { "$ref": "#/$defs/modelMap" },
     "workflow": { "$ref": "#/$defs/workflowMap" },

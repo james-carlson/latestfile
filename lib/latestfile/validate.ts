@@ -51,6 +51,7 @@ export type EntityType = (typeof ENTITY_TYPES)[number];
 export const RESERVED_FIELDS = [
   "from", "version", "provider", "description", "applies_to", "uses",
   "models", "import", "source", "role", "contexts", "tools", "scope",
+  "published_as",
 ] as const;
 
 /** Which reserved fields are legitimately defined for each block type. */
@@ -186,8 +187,24 @@ export function validate(source: string): ValidationResult {
     scope = scopeAttr.value.value as Scope;
   }
 
+  const publishedAs = topByKey.get("published_as");
+  if (publishedAs) {
+    if (publishedAs.value.kind !== "string") {
+      add("error", "invalid-type", "'published_as' must be a string", publishedAs);
+    } else if (!REGISTRY_URI_RE.test(publishedAs.value.value)) {
+      add(
+        "error",
+        "invalid-registry-uri",
+        `'published_as' must be a registry URI — got "${publishedAs.value.value}"`,
+        publishedAs,
+        'Form: registry:[<host>/]<namespace>[/<name>], e.g. registry:james'
+      );
+    }
+  }
+
+  const KNOWN_TOP_LEVEL = ["latestfile_version", "scope", "published_as"];
   for (const a of topAttrs) {
-    if (a.key !== "latestfile_version" && a.key !== "scope") {
+    if (!KNOWN_TOP_LEVEL.includes(a.key)) {
       add(
         "warning",
         "unknown-attribute",
