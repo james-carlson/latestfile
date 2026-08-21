@@ -44,6 +44,15 @@ a:hover { text-decoration: underline; }
   border-bottom: 1px solid var(--line);
 }
 .brand { font-weight: 700; letter-spacing: -0.02em; font-size: 1.05rem; }
+.brandlink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  color: var(--fg);
+}
+.brandlink:hover { text-decoration: none; color: var(--accent); }
+/* Sized in em so it tracks the wordmark if the brand font-size ever changes. */
+.brandmark { height: 0.82em; width: auto; color: var(--accent); flex: none; }
 .brand span { color: var(--muted); font-weight: 400; }
 .nav a { color: var(--muted); font-size: 0.95rem; margin-left: 1.25rem; }
 

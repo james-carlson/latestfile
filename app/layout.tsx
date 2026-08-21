@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { REPO } from "@/lib/links";
+import { Mark } from "./mark";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://latest.dev"),
@@ -28,7 +29,11 @@ export default function RootLayout({
         <div className="wrap">
           <header className="masthead">
             <div className="brand">
-              <a href="/">latestfile</a> <span>· latest.dev</span>
+              <a href="/" className="brandlink">
+                <Mark className="brandmark" />
+                latestfile
+              </a>{" "}
+              <span>· latest.dev</span>
             </div>
             <nav className="nav">
               <a href="/new">Build</a>
