@@ -1,4 +1,4 @@
-# Proposing Precision: Giving AI Usage a Spec instead of a Sentence
+# A proposal for precision: Describing AI usage with a spec, not a sentence
 
 ## *An introduction to the `latestfile`, a new way to describe AI usage.*
 
@@ -6,7 +6,7 @@
 1. [The problem](#1-the-problem)
 1. [The `latestfile`: describing AI usage with precision](#2-the-latestfile-describing-ai-usage-with-precision)
 1. [A sample `latestfile`](#3-a-sample-latestfile)
-1. [Try it out!](#4-try-it-out-make-and-publish-your-own-and-give-me-feedback)
+1. [Try it out!](#4-try-it-out)
 1. [Contribute](https://github.com/james-carlson/latestfile/blob/main/CONTRIBUTING.md)
 
 ### 1. The problem
@@ -82,7 +82,7 @@ This initial (v0.1) of [the spec](/spec) is deliberately narrow. It just puts bo
 
 Admittedly, for most of us, the `latestfile` format will seem a bit dry. Most people don't talk in this level of precision naturally. But, by giving some thought to the important structures in our AI world, and the relationships between them, adherence to a standard format for explanation allows both us and machines to better understand what we are and aren't benefitting from.
 
-### 4. Try it out: Make and publish your own (and give me feedback!)
+### 4. Try it out!
 
 The `latestfile` idea is still a draft. I'm open to change and criticism, and I am inviting feedback with the  hope you'll share your thoughts to help me refine the idea.
 

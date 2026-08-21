@@ -6,11 +6,11 @@
     "dev": "next dev",
     "build": "node scripts/embed-artifacts.mjs && next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "eslint ."
   },
   "dependencies": {
     "@upstash/redis": "^1.38.2",
-    "next": "15.5.22",
+    "next": "16.3.1",
     "react": "19.0.0",
     "react-dom": "19.0.0",
     "react-markdown": "9.0.1",
@@ -21,6 +21,8 @@
     "@types/node": "22.10.7",
     "@types/react": "19.0.7",
     "@types/react-syntax-highlighter": "15.5.13",
-    "typescript": "5.7.3"
+    "typescript": "5.7.3",
+    "eslint": "^9",
+    "eslint-config-next": "16.3.1"
   }
 }
