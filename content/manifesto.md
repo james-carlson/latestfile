@@ -6,7 +6,8 @@
 1. [The problem](#1-the-problem)
 1. [The `latestfile`: describing AI usage with precision](#2-the-latestfile-describing-ai-usage-with-precision)
 1. [A sample `latestfile`](#3-a-sample-latestfile)
-1. [Try it out!](#4-try-it-out)
+1. [Why "latestfile"?](#4-why-latestfile)
+1. [Try it out!](#5-try-it-out)
 1. [Contribute](https://github.com/james-carlson/latestfile/blob/main/CONTRIBUTING.md)
 
 ### 1. The problem
@@ -82,7 +83,21 @@ This initial (v0.1) of [the spec](/spec) is deliberately narrow. It just puts bo
 
 Admittedly, for most of us, the `latestfile` format will seem a bit dry. Most people don't talk in this level of precision naturally. But, by giving some thought to the important structures in our AI world, and the relationships between them, adherence to a standard format for explanation allows both us and machines to better understand what we are and aren't benefitting from.
 
-### 4. Try it out!
+### 4. Why "latestfile"?
+
+Because it isn't a lockfile.
+
+Every developer knows what a lockfile does. `package-lock.json`, `Cargo.lock`, `poetry.lock`. Its job is to **pin** — freeze exact resolved versions so the build is identical on every machine, forever. It's machine-generated, you don't hand-edit it, and its whole purpose is to stop things from changing.
+
+A `latestfile` is the opposite on every axis. You write it. It describes what you're using *now*. And it's expected to go out of date, because your AI setup will look different in three months whether you like it or not.
+
+npm already has both halves of this. `package.json` is where you declare intent — hand-authored, loose, allowed to drift. `package-lock.json` is the exact resolution — precise, pinned, generated. A `latestfile` is the first half. The second half, measuring what you *actually* used rather than what you intended to, is real work and it comes later.
+
+There's an older word for this kind of document, too: a **manifest**. A ship's manifest declares what's aboard. From Latin *manifestus* — "made visible." Which is the whole point. You can't measure or improve a practice you can't see, and right now AI usage is invisible. A manifest makes it manifest.
+
+So: a `latestfile` is a manifest of how you use AI. Not a lockfile of it.
+
+### 5. Try it out!
 
 The `latestfile` idea is still a draft. I'm open to change and criticism, and I am inviting feedback with the  hope you'll share your thoughts to help me refine the idea.
 
